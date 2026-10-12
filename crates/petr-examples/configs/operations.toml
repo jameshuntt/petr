@@ -1,0 +1,9 @@
+[operations]
+"0x01" = { type = "add_prefix", prefix = "Prefix_" }
+"0x02" = { type = "add_suffix", suffix = "_Suffix" }
+"0x10" = { type = "octal_multiply", multiplier = 4 }
+"0x11" = { type = "octal_add", value = 7 }
+"0x20" = { type = "octet_encode" }
+"0x21" = { type = "octet_add", value = 16 }
+"0x30" = { type = "acc_add", value = 5 }
+"0x31" = { type = "acc_mul", multiplier = 3 }

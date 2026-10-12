@@ -1,0 +1,12 @@
+[package]
+name = "petr-spatial"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Spatial routing over petr words: quadrant routing and Morton codes."
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "../../README.md"
+[dependencies]
+petr-core = { path = "../petr-core", version = "0.1.0" }

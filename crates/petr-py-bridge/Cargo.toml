@@ -1,0 +1,25 @@
+[package]
+name = "petr-py-bridge"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Optional PyO3 bridge skeleton for petr-dispatch (not published)."
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "../../README.md"
+publish = false
+[lib]
+name = "petr_py_bridge"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+petr-dispatch = { path = "../petr-dispatch", version = "0.1.0" }
+pyo3 = { version = "0.22", features = ["extension-module", "abi3-py37"], optional = true }
+
+[features]
+default = []
+python = ["dep:pyo3"]
+
+[build-dependencies]
+pyo3-build-config = "0.22"

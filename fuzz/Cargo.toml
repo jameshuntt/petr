@@ -1,0 +1,35 @@
+[package]
+name = "petr-fuzz"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+petr-core = { path = "../crates/petr-core" }
+petr-dispatch = { path = "../crates/petr-dispatch" }
+petr-collections = { path = "../crates/petr-collections" }
+
+[[bin]]
+name = "selector_word_decode"
+path = "fuzz_targets/selector_word_decode.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "toml_operation_config"
+path = "fuzz_targets/toml_operation_config.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "encoded_handle_decode"
+path = "fuzz_targets/encoded_handle_decode.rs"
+test = false
+doc = false
+bench = false

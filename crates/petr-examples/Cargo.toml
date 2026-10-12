@@ -1,0 +1,20 @@
+[package]
+name = "petr-examples"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Runnable examples for the petr crates (not published)."
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "../../README.md"
+publish = false
+
+[dependencies]
+petr-core = { path = "../petr-core", version = "0.1.0" }
+petr-dispatch = { path = "../petr-dispatch", version = "0.1.0" }
+petr-collections = { path = "../petr-collections", version = "0.1.0" }
+petr-resource = { path = "../petr-resource", version = "0.1.0" }
+petr-spatial = { path = "../petr-spatial", version = "0.1.0" }
+petr-math = { path = "../petr-math", version = "0.1.0" }
+petr-py-bridge = { path = "../petr-py-bridge", version = "0.1.0" }

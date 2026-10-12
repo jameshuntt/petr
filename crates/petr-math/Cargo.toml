@@ -1,0 +1,12 @@
+[package]
+name = "petr-math"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Matrix and math demos using petr selector-style active/nop dispatch."
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "../../README.md"
+[dependencies]
+petr-core = { path = "../petr-core", version = "0.1.0" }

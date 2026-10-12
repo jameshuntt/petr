@@ -1,0 +1,29 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/petr-core",
+    "crates/petr-dispatch",
+    "crates/petr-collections",
+    "crates/petr-resource",
+    "crates/petr-math",
+    "crates/petr-spatial",
+    "crates/petr",
+    "crates/petr-py-bridge",
+    "crates/petr-examples",
+]
+exclude = ["fuzz"]
+
+[workspace.package]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+version = "0.1.0"
+authors = ["James Hunt"]
+repository = "https://github.com/jameshuntt/petr"
+keywords = ["pointer", "tagging", "arena", "dispatch", "handles"]
+categories = ["data-structures", "memory-management"]
+
+[workspace.dependencies]
+thiserror = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"

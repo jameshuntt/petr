@@ -1,0 +1,13 @@
+[package]
+name = "petr-resource"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Chunk-oriented resource scheduler driven by petr selector words."
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "../../README.md"
+[dependencies]
+petr-core = { path = "../petr-core", version = "0.1.0" }
+thiserror = { workspace = true }
