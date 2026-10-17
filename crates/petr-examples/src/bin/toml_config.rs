@@ -1,4 +1,4 @@
-use petr_dispatch::{table_from_toml, OpFrame};
+use petr_dispatch::{OpFrame, table_from_toml};
 
 fn main() {
     let config = include_str!("../../configs/operations.toml");

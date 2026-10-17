@@ -21,7 +21,9 @@ pub struct ChainProgram {
 
 impl ChainProgram {
     /// Create an empty chain.
-    pub fn new() -> Self { Self { steps: Vec::new() } }
+    pub fn new() -> Self {
+        Self { steps: Vec::new() }
+    }
 
     /// Push a step and return its index.
     pub fn push(&mut self, step: ChainStep) -> usize {
@@ -31,16 +33,26 @@ impl ChainProgram {
     }
 
     /// Run the chain from `start`.
-    pub fn run(&self, table: &OperationTable, start: usize, mut frame: OpFrame) -> DispatchResult<OpFrame> {
+    pub fn run(
+        &self,
+        table: &OperationTable,
+        start: usize,
+        mut frame: OpFrame,
+    ) -> DispatchResult<OpFrame> {
         let mut pc = Some(start);
         let mut guard = 0usize;
         while let Some(i) = pc {
-            let step = self.steps.get(i).ok_or(DispatchError::InvalidContinuation(i))?;
+            let step = self
+                .steps
+                .get(i)
+                .ok_or(DispatchError::InvalidContinuation(i))?;
             frame = table.execute_word(step.selector, frame)?;
             pc = step.next;
             guard += 1;
             if guard > self.steps.len().saturating_mul(4).max(64) {
-                return Err(DispatchError::InvalidInput("chain guard tripped; possible cycle".into()));
+                return Err(DispatchError::InvalidInput(
+                    "chain guard tripped; possible cycle".into(),
+                ));
             }
         }
         Ok(frame)

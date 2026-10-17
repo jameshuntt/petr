@@ -1,7 +1,7 @@
 use petr_collections::{DispatchVec, KeyedTaggedVec, TaggedSlab, TaggedVec};
-use petr_dispatch::{default_table, OpFrame};
-use proptest::*;
 use petr_core::{Key, LowTagLayout, PortHint, ProphecyBits, SelectorWord};
+use petr_dispatch::{OpFrame, default_table};
+use proptest::*;
 
 #[repr(align(32))]
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -21,18 +21,36 @@ fn active() -> ProphecyBits {
 }
 
 fn skip() -> ProphecyBits {
-    ProphecyBits { skip_hint: true, ..active() }
+    ProphecyBits {
+        skip_hint: true,
+        ..active()
+    }
 }
 
 #[test]
 fn tagged_vec_handles_remain_stable_after_growth_and_tag_mutation() {
     let mut vec = TaggedVec::<Item, 5>::new();
-    let first = vec.push(Item { id: 0, text: "first" }, 0b10101).unwrap();
+    let first = vec
+        .push(
+            Item {
+                id: 0,
+                text: "first",
+            },
+            0b10101,
+        )
+        .unwrap();
     let first_handle = vec.handle(first).unwrap();
     let first_addr = first_handle.clean_addr();
 
     for i in 1..512 {
-        vec.push(Item { id: i, text: "more" }, i & LowTagLayout::<5>::LOW_MASK).unwrap();
+        vec.push(
+            Item {
+                id: i,
+                text: "more",
+            },
+            i & LowTagLayout::<5>::LOW_MASK,
+        )
+        .unwrap();
     }
 
     assert_eq!(vec.len(), 512);
@@ -63,13 +81,24 @@ fn tagged_vec_get_mut_updates_the_value_without_changing_handle_address() {
 fn keyed_vec_masks_addresses_and_reveals_only_inside_collection_with_matching_key() {
     let key = Key::<5>::from_seed(0xABCD_1234);
     let mut vec = KeyedTaggedVec::<Item, 5>::with_key(key);
-    let idx = vec.push(Item { id: 7, text: "secret" }, 0b10101).unwrap();
+    let idx = vec
+        .push(
+            Item {
+                id: 7,
+                text: "secret",
+            },
+            0b10101,
+        )
+        .unwrap();
     let handle = vec.handle(idx).unwrap();
 
     assert_eq!(vec.key(), key);
     assert_eq!(handle.tag(), 0b10101);
     assert_eq!(vec.get_by_handle(handle).unwrap().unwrap().text, "secret");
-    assert_ne!(handle.stored_word() & LowTagLayout::<5>::CLEAN_MASK, handle.reveal_addr(key).unwrap());
+    assert_ne!(
+        handle.stored_word() & LowTagLayout::<5>::CLEAN_MASK,
+        handle.reveal_addr(key).unwrap()
+    );
 
     let wrong_key = Key::<5>::from_seed(0xDEAD_BEEF);
     let wrong_addr = handle.reveal_addr(wrong_key).ok();
@@ -83,7 +112,9 @@ fn keyed_vec_preserves_distinct_tags_and_indexes_across_many_pushes() {
     let mut vec = KeyedTaggedVec::<Item, 4>::with_key(key);
 
     for i in 0..128 {
-        let idx = vec.push(Item { id: i, text: "x" }, i & LowTagLayout::<4>::LOW_MASK).unwrap();
+        let idx = vec
+            .push(Item { id: i, text: "x" }, i & LowTagLayout::<4>::LOW_MASK)
+            .unwrap();
         assert_eq!(idx, i);
     }
 
@@ -132,8 +163,18 @@ fn dispatch_vec_stores_selector_prophecy_and_low_tag_per_item() {
     let encode = SelectorWord::new(1, 2, 0x20);
     let prefix = SelectorWord::new(1, 2, 0x01);
 
-    vec.push(Item { id: 1, text: "hex" }, 0b00101, encode, active()).unwrap();
-    vec.push(Item { id: 2, text: "skip" }, 0b00110, prefix, skip()).unwrap();
+    vec.push(Item { id: 1, text: "hex" }, 0b00101, encode, active())
+        .unwrap();
+    vec.push(
+        Item {
+            id: 2,
+            text: "skip",
+        },
+        0b00110,
+        prefix,
+        skip(),
+    )
+    .unwrap();
 
     let handles: Vec<_> = vec.handles().collect();
     assert_eq!(handles.len(), 2);
@@ -148,9 +189,33 @@ fn dispatch_vec_stores_selector_prophecy_and_low_tag_per_item() {
 fn dispatch_vec_uses_selector_when_active_and_preserves_seed_frame_when_skipped() {
     let table = default_table();
     let mut vec = DispatchVec::<Item, 5>::new();
-    vec.push(Item { id: 1, text: "run" }, 1, SelectorWord::new(1, 1, 0x01), active()).unwrap();
-    vec.push(Item { id: 2, text: "skip" }, 2, SelectorWord::new(1, 1, 0x02), skip()).unwrap();
-    vec.push(Item { id: 3, text: "run2" }, 3, SelectorWord::new(1, 1, 0x20), active()).unwrap();
+    vec.push(
+        Item { id: 1, text: "run" },
+        1,
+        SelectorWord::new(1, 1, 0x01),
+        active(),
+    )
+    .unwrap();
+    vec.push(
+        Item {
+            id: 2,
+            text: "skip",
+        },
+        2,
+        SelectorWord::new(1, 1, 0x02),
+        skip(),
+    )
+    .unwrap();
+    vec.push(
+        Item {
+            id: 3,
+            text: "run2",
+        },
+        3,
+        SelectorWord::new(1, 1, 0x20),
+        active(),
+    )
+    .unwrap();
 
     let out = vec.dispatch_all(&table, OpFrame::text("ff")).unwrap();
     assert_eq!(out[0], OpFrame::text("Prefix_ff"));
@@ -162,7 +227,13 @@ fn dispatch_vec_uses_selector_when_active_and_preserves_seed_frame_when_skipped(
 fn dispatch_vec_propagates_operation_errors_for_active_bad_inputs() {
     let table = default_table();
     let mut vec = DispatchVec::<Item, 5>::new();
-    vec.push(Item { id: 1, text: "bad" }, 1, SelectorWord::new(1, 1, 0x20), active()).unwrap();
+    vec.push(
+        Item { id: 1, text: "bad" },
+        1,
+        SelectorWord::new(1, 1, 0x20),
+        active(),
+    )
+    .unwrap();
 
     assert!(vec.dispatch_all(&table, OpFrame::text("not hex")).is_err());
 }
@@ -177,7 +248,9 @@ fn keyed_dispatch_vec_combines_iv_selector_prophecy_and_generation_checks() {
     let mut vec = KeyedDispatchVec::<Item, 5>::with_key(key);
     let selector = SelectorWord::new(3, 4, 0x20);
 
-    let h = vec.push(Item { id: 99, text: "kd" }, 0b10101, selector, active()).unwrap();
+    let h = vec
+        .push(Item { id: 99, text: "kd" }, 0b10101, selector, active())
+        .unwrap();
     assert_eq!(h.tag(), 0b10101);
     assert_eq!(h.selector(), selector);
     assert_eq!(h.selector().trait_id(), 3);
@@ -189,7 +262,10 @@ fn keyed_dispatch_vec_combines_iv_selector_prophecy_and_generation_checks() {
     let revealed = key.reveal_addr(h.check_word()).unwrap();
     assert_ne!(masked_clean, revealed);
 
-    let out = vec.dispatch_handle(&table, h, OpFrame::text("ff")).unwrap().unwrap();
+    let out = vec
+        .dispatch_handle(&table, h, OpFrame::text("ff"))
+        .unwrap()
+        .unwrap();
     assert_eq!(out, OpFrame::text("FF"));
 }
 
@@ -197,7 +273,17 @@ fn keyed_dispatch_vec_combines_iv_selector_prophecy_and_generation_checks() {
 fn keyed_dispatch_vec_rejects_forged_check_words_and_stale_handles() {
     let key = Key::<5>::from_seed(0xBEEF);
     let mut vec = KeyedDispatchVec::<Item, 5>::with_key(key);
-    let h = vec.push(Item { id: 1, text: "live" }, 3, SelectorWord::new(1, 1, 0x01), active()).unwrap();
+    let h = vec
+        .push(
+            Item {
+                id: 1,
+                text: "live",
+            },
+            3,
+            SelectorWord::new(1, 1, 0x01),
+            active(),
+        )
+        .unwrap();
 
     let forged_word = NonZeroUsize::new(h.check_word().get() ^ (1 << 8)).unwrap();
     let forged = h.with_check_word(forged_word);
@@ -210,7 +296,14 @@ fn keyed_dispatch_vec_rejects_forged_check_words_and_stale_handles() {
     assert_eq!(removed.text, "live");
     assert!(vec.get(h).is_err());
 
-    let h2 = vec.push(Item { id: 2, text: "new" }, 4, SelectorWord::new(1, 1, 0x02), active()).unwrap();
+    let h2 = vec
+        .push(
+            Item { id: 2, text: "new" },
+            4,
+            SelectorWord::new(1, 1, 0x02),
+            active(),
+        )
+        .unwrap();
     assert_eq!(h2.index(), h.index());
     assert_ne!(h2.generation(), h.generation());
     assert!(vec.get(h).is_err());
@@ -221,7 +314,14 @@ fn keyed_dispatch_vec_rejects_forged_check_words_and_stale_handles() {
 fn keyed_dispatch_vec_set_tag_validates_and_refreshes_handle() {
     let key = Key::<5>::from_seed(0xCAFE);
     let mut vec = KeyedDispatchVec::<Item, 5>::with_key(key);
-    let h = vec.push(Item { id: 5, text: "tag" }, 1, SelectorWord::new(1, 1, 0x01), active()).unwrap();
+    let h = vec
+        .push(
+            Item { id: 5, text: "tag" },
+            1,
+            SelectorWord::new(1, 1, 0x01),
+            active(),
+        )
+        .unwrap();
 
     let h2 = vec.set_tag(h, 0b11111).unwrap();
     assert_eq!(h2.tag(), 0b11111);
@@ -259,8 +359,12 @@ fn keyed_arena_insert_get_mut_remove_and_reuse_slots_with_generations() {
     let mut arena = KeyedArena::<Item, 5>::with_key(key);
     let selector = SelectorWord::new(2, 3, 0x01);
 
-    let a = arena.insert(Item { id: 1, text: "a" }, 0b10101, selector, active()).unwrap();
-    let b = arena.insert(Item { id: 2, text: "b" }, 0b00111, selector, active()).unwrap();
+    let a = arena
+        .insert(Item { id: 1, text: "a" }, 0b10101, selector, active())
+        .unwrap();
+    let b = arena
+        .insert(Item { id: 2, text: "b" }, 0b00111, selector, active())
+        .unwrap();
 
     assert_eq!(arena.len(), 2);
     assert_eq!(arena.slot_capacity(), 2);
@@ -278,7 +382,9 @@ fn keyed_arena_insert_get_mut_remove_and_reuse_slots_with_generations() {
     assert_eq!(arena.free_len(), 1);
     assert!(arena.get(a).is_err());
 
-    let c = arena.insert(Item { id: 3, text: "c" }, 0b00011, selector, active()).unwrap();
+    let c = arena
+        .insert(Item { id: 3, text: "c" }, 0b00011, selector, active())
+        .unwrap();
     assert_eq!(c.index(), a.index());
     assert_ne!(c.generation(), a.generation());
     assert!(arena.get(a).is_err());
@@ -290,13 +396,29 @@ fn keyed_arena_rejects_forged_generation_check_selector_and_prophecy() {
     let key = Key::<5>::from_seed(0x5150);
     let mut arena = KeyedArena::<Item, 5>::with_key(key);
     let h = arena
-        .insert(Item { id: 10, text: "secure" }, 0b01010, SelectorWord::new(1, 2, 0x20), active())
+        .insert(
+            Item {
+                id: 10,
+                text: "secure",
+            },
+            0b01010,
+            SelectorWord::new(1, 2, 0x20),
+            active(),
+        )
         .unwrap();
 
     let forged_word = NonZeroUsize::new(h.check_word().get() ^ (1 << 8)).unwrap();
     assert!(arena.get(h.with_check_word(forged_word)).is_err());
-    assert!(arena.get(h.with_generation(h.generation().wrapping_add(1))).is_err());
-    assert!(arena.get(h.with_selector(SelectorWord::new(1, 2, 0x21))).is_err());
+    assert!(
+        arena
+            .get(h.with_generation(h.generation().wrapping_add(1)))
+            .is_err()
+    );
+    assert!(
+        arena
+            .get(h.with_selector(SelectorWord::new(1, 2, 0x21)))
+            .is_err()
+    );
     assert!(arena.get(h.with_prophecy(skip())).is_err());
 
     assert_eq!(arena.get(h).unwrap().text, "secure");
@@ -306,7 +428,17 @@ fn keyed_arena_rejects_forged_generation_check_selector_and_prophecy() {
 fn keyed_arena_metadata_updates_invalidate_old_handles() {
     let key = Key::<5>::from_seed(0x7777);
     let mut arena = KeyedArena::<Item, 5>::with_key(key);
-    let h = arena.insert(Item { id: 1, text: "meta" }, 1, SelectorWord::new(1, 1, 0x01), active()).unwrap();
+    let h = arena
+        .insert(
+            Item {
+                id: 1,
+                text: "meta",
+            },
+            1,
+            SelectorWord::new(1, 1, 0x01),
+            active(),
+        )
+        .unwrap();
 
     let h2 = arena.set_tag(h, 0b11111).unwrap();
     assert!(arena.get(h).is_err());
@@ -314,7 +446,9 @@ fn keyed_arena_metadata_updates_invalidate_old_handles() {
     assert_eq!(arena.get(h2).unwrap().text, "meta");
     assert!(arena.set_tag(h2, 0b1_00000).is_err());
 
-    let h3 = arena.set_selector(h2, SelectorWord::new(1, 1, 0x02)).unwrap();
+    let h3 = arena
+        .set_selector(h2, SelectorWord::new(1, 1, 0x02))
+        .unwrap();
     assert!(arena.get(h2).is_err());
     assert_eq!(arena.selector(h3).unwrap().function_id(), 0x02);
 
@@ -334,13 +468,39 @@ fn keyed_arena_dispatches_active_entries_and_skips_skip_hint_entries() {
     let table = default_table();
     let mut arena = KeyedArena::<Item, 5>::with_key(key);
 
-    let encode = arena.insert(Item { id: 1, text: "encode" }, 1, SelectorWord::new(1, 1, 0x20), active()).unwrap();
-    let skipped = arena.insert(Item { id: 2, text: "skip" }, 2, SelectorWord::new(1, 1, 0x01), skip()).unwrap();
+    let encode = arena
+        .insert(
+            Item {
+                id: 1,
+                text: "encode",
+            },
+            1,
+            SelectorWord::new(1, 1, 0x20),
+            active(),
+        )
+        .unwrap();
+    let skipped = arena
+        .insert(
+            Item {
+                id: 2,
+                text: "skip",
+            },
+            2,
+            SelectorWord::new(1, 1, 0x01),
+            skip(),
+        )
+        .unwrap();
 
-    let encoded = arena.dispatch_handle(&table, encode, OpFrame::text("ff")).unwrap().unwrap();
+    let encoded = arena
+        .dispatch_handle(&table, encode, OpFrame::text("ff"))
+        .unwrap()
+        .unwrap();
     assert_eq!(encoded, OpFrame::text("FF"));
 
-    let skipped_out = arena.dispatch_handle(&table, skipped, OpFrame::text("ff")).unwrap().unwrap();
+    let skipped_out = arena
+        .dispatch_handle(&table, skipped, OpFrame::text("ff"))
+        .unwrap()
+        .unwrap();
     assert_eq!(skipped_out, OpFrame::text("ff"));
 
     let all = arena.dispatch_all(&table, OpFrame::text("ff")).unwrap();
@@ -355,12 +515,17 @@ fn keyed_arena_live_handles_and_clear_behave_like_arena_policy() {
     let mut arena = KeyedArena::<Item, 4>::with_key(key);
 
     for i in 0..16 {
-        arena.insert(
-            Item { id: i, text: "live" },
-            i & LowTagLayout::<4>::LOW_MASK,
-            SelectorWord::new(1, (i & 0x0F) as u8, 0x01),
-            active(),
-        ).unwrap();
+        arena
+            .insert(
+                Item {
+                    id: i,
+                    text: "live",
+                },
+                i & LowTagLayout::<4>::LOW_MASK,
+                SelectorWord::new(1, (i & 0x0F) as u8, 0x01),
+                active(),
+            )
+            .unwrap();
     }
 
     let handles = arena.live_handles();
@@ -408,7 +573,15 @@ fn encoded_arena_handles_roundtrip_and_validate_only_in_owner() {
     let key = Key::<5>::from_seed(0xEC0D_EC0D);
     let mut engine = ArenaEngine::<Item, 5>::with_key_and_table(key, table);
     let handle = engine
-        .insert(Item { id: 44, text: "encoded" }, 0b10101, SelectorWord::new(1, 1, 0x20), active())
+        .insert(
+            Item {
+                id: 44,
+                text: "encoded",
+            },
+            0b10101,
+            SelectorWord::new(1, 1, 0x20),
+            active(),
+        )
         .unwrap();
 
     let encoded = engine.encode_handle(handle).unwrap();
@@ -435,15 +608,29 @@ fn arena_engine_dispatches_and_delegates_metadata_updates() {
     let table = default_table();
     let mut engine = ArenaEngine::<Item, 5>::with_key_and_table(Key::from_seed(0xE001), table);
     let handle = engine
-        .insert(Item { id: 7, text: "engine" }, 1, SelectorWord::new(1, 1, 0x20), active())
+        .insert(
+            Item {
+                id: 7,
+                text: "engine",
+            },
+            1,
+            SelectorWord::new(1, 1, 0x20),
+            active(),
+        )
         .unwrap();
 
-    let out = engine.dispatch(handle, OpFrame::text("ff")).unwrap().unwrap();
+    let out = engine
+        .dispatch(handle, OpFrame::text("ff"))
+        .unwrap()
+        .unwrap();
     assert_eq!(out, OpFrame::text("FF"));
 
     let skipped = engine.set_prophecy(handle, skip()).unwrap();
     assert!(engine.get(handle).is_err());
-    let out = engine.dispatch(skipped, OpFrame::text("ff")).unwrap().unwrap();
+    let out = engine
+        .dispatch(skipped, OpFrame::text("ff"))
+        .unwrap()
+        .unwrap();
     assert_eq!(out, OpFrame::text("ff"));
 
     let removed = engine.remove(skipped).unwrap();

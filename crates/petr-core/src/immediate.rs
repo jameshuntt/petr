@@ -19,10 +19,14 @@ impl ValueWord {
     }
 
     /// Return true when this word is an immediate value.
-    pub const fn is_immediate(self) -> bool { self.0 & Self::IMMEDIATE_BIT != 0 }
+    pub const fn is_immediate(self) -> bool {
+        self.0 & Self::IMMEDIATE_BIT != 0
+    }
 
     /// Return the raw word.
-    pub const fn raw(self) -> u64 { self.0 }
+    pub const fn raw(self) -> u64 {
+        self.0
+    }
 
     /// Decode the immediate as a small signed value.
     pub const fn as_i31(self) -> Option<i32> {

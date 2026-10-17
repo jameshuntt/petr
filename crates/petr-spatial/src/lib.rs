@@ -45,7 +45,9 @@ pub struct BranchlessQuadtree {
 
 impl BranchlessQuadtree {
     /// Create a router with fixed depth.
-    pub const fn new(depth: u8) -> Self { Self { depth } }
+    pub const fn new(depth: u8) -> Self {
+        Self { depth }
+    }
 
     /// Route a point by arithmetic quadrant extraction.
     pub fn route(self, point: Point2) -> Vec<QuadStep> {
@@ -55,7 +57,11 @@ impl BranchlessQuadtree {
             let shift = (self.depth - level - 1) * 2;
             let quadrant = ((morton >> shift) & 0b11) as u8;
             let selector = SelectorWord::new(0x0A, quadrant & 0x0F, level);
-            steps.push(QuadStep { level, quadrant, selector });
+            steps.push(QuadStep {
+                level,
+                quadrant,
+                selector,
+            });
         }
         steps
     }

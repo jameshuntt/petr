@@ -21,7 +21,9 @@ pub struct TaggedNonNull<T: ?Sized, const LOW_BITS: usize> {
 
 impl<T: ?Sized, const LOW_BITS: usize> Copy for TaggedNonNull<T, LOW_BITS> {}
 impl<T: ?Sized, const LOW_BITS: usize> Clone for TaggedNonNull<T, LOW_BITS> {
-    fn clone(&self) -> Self { *self }
+    fn clone(&self) -> Self {
+        *self
+    }
 }
 
 impl<T, const LOW_BITS: usize> TaggedNonNull<T, LOW_BITS> {
@@ -57,16 +59,24 @@ impl<T, const LOW_BITS: usize> TaggedNonNull<T, LOW_BITS> {
     }
 
     /// Return the full tagged word.
-    pub fn word(self) -> usize { self.clean_addr() | self.tag }
+    pub fn word(self) -> usize {
+        self.clean_addr() | self.tag
+    }
 
     /// Return the low tag.
-    pub const fn tag(self) -> usize { self.tag }
+    pub const fn tag(self) -> usize {
+        self.tag
+    }
 
     /// Return the cleaned address word.
-    pub fn clean_addr(self) -> usize { self.ptr.as_ptr() as usize }
+    pub fn clean_addr(self) -> usize {
+        self.ptr.as_ptr() as usize
+    }
 
     /// Return the cleaned pointer while preserving provenance when available.
-    pub const fn clean(self) -> NonNull<T> { self.ptr }
+    pub const fn clean(self) -> NonNull<T> {
+        self.ptr
+    }
 
     /// Return a copy with a different low tag.
     pub fn with_tag(self, tag: usize) -> TagResult<Self> {

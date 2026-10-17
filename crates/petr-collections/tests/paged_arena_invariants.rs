@@ -1,6 +1,6 @@
 use std::sync::{
-    atomic::{AtomicUsize, Ordering},
     Arc,
+    atomic::{AtomicUsize, Ordering},
 };
 
 use petr_collections::{EncodedArenaHandle, PagedKeyedArena};
@@ -27,9 +27,7 @@ fn prophecy(skip_hint: bool) -> ProphecyBits {
 
 #[test]
 fn paged_arena_amortizes_allocations_and_keeps_handles_valid() {
-    let mut arena = PagedKeyedArena::<Cell, LOW_BITS, PAGE_SIZE>::with_key(
-        Key::from_seed(0x67_1A),
-    );
+    let mut arena = PagedKeyedArena::<Cell, LOW_BITS, PAGE_SIZE>::with_key(Key::from_seed(0x67_1A));
     arena.reserve_entries(10).expect("reserve pages");
     assert_eq!(arena.page_count(), 3);
     assert_eq!(arena.allocated_slot_capacity(), 12);
@@ -53,9 +51,7 @@ fn paged_arena_amortizes_allocations_and_keeps_handles_valid() {
 
 #[test]
 fn paged_arena_mutates_in_place_and_transitions_metadata_once() {
-    let mut arena = PagedKeyedArena::<Cell, LOW_BITS, PAGE_SIZE>::with_key(
-        Key::from_seed(0x67_1B),
-    );
+    let mut arena = PagedKeyedArena::<Cell, LOW_BITS, PAGE_SIZE>::with_key(Key::from_seed(0x67_1B));
     let old = arena
         .insert(Cell(7), 1, READY, prophecy(false))
         .expect("insert");
@@ -76,9 +72,7 @@ fn paged_arena_mutates_in_place_and_transitions_metadata_once() {
 
 #[test]
 fn paged_arena_reuses_slots_with_new_generations_and_encoded_handles() {
-    let mut arena = PagedKeyedArena::<Cell, LOW_BITS, PAGE_SIZE>::with_key(
-        Key::from_seed(0x67_1C),
-    );
+    let mut arena = PagedKeyedArena::<Cell, LOW_BITS, PAGE_SIZE>::with_key(Key::from_seed(0x67_1C));
     let first = arena
         .insert(Cell(11), 1, READY, prophecy(false))
         .expect("insert first");
@@ -96,14 +90,15 @@ fn paged_arena_reuses_slots_with_new_generations_and_encoded_handles() {
     let decoded = encoded
         .to_paged_handle::<Cell, LOW_BITS, PAGE_SIZE>()
         .expect("decode");
-    assert_eq!(arena.get(decoded).expect("decoded handle validates"), &Cell(12));
+    assert_eq!(
+        arena.get(decoded).expect("decoded handle validates"),
+        &Cell(12)
+    );
 }
 
 #[test]
 fn reset_retain_pages_drops_entries_keeps_capacity_and_invalidates_handles() {
-    let mut arena = PagedKeyedArena::<Cell, LOW_BITS, PAGE_SIZE>::with_key(
-        Key::from_seed(0x67_1D),
-    );
+    let mut arena = PagedKeyedArena::<Cell, LOW_BITS, PAGE_SIZE>::with_key(Key::from_seed(0x67_1D));
     arena.reserve_entries(9).expect("reserve pages");
     let first = arena
         .insert(Cell(21), 1, READY, prophecy(false))
@@ -127,9 +122,11 @@ fn reset_retain_pages_drops_entries_keeps_capacity_and_invalidates_handles() {
         .expect("insert after reset");
     assert_eq!(reused.index(), 0);
     assert_ne!(reused.generation(), first.generation());
-    assert_eq!(arena.get(reused).expect("reused handle validates"), &Cell(23));
+    assert_eq!(
+        arena.get(reused).expect("reused handle validates"),
+        &Cell(23)
+    );
 }
-
 
 #[repr(align(16))]
 struct DropCell(Arc<AtomicUsize>);
@@ -143,9 +140,8 @@ impl Drop for DropCell {
 #[test]
 fn reset_and_clear_drop_each_initialized_value_exactly_once() {
     let drops = Arc::new(AtomicUsize::new(0));
-    let mut arena = PagedKeyedArena::<DropCell, LOW_BITS, PAGE_SIZE>::with_key(
-        Key::from_seed(0x67_1E),
-    );
+    let mut arena =
+        PagedKeyedArena::<DropCell, LOW_BITS, PAGE_SIZE>::with_key(Key::from_seed(0x67_1E));
     for _ in 0..7 {
         arena
             .insert(DropCell(Arc::clone(&drops)), 1, READY, prophecy(false))
@@ -167,9 +163,7 @@ fn reset_and_clear_drop_each_initialized_value_exactly_once() {
 fn keyed_page_capability_amortizes_validation_and_transitions_live_entries() {
     use petr_collections::{KeyedArenaError, PagedEntryAction};
 
-    let mut arena = PagedKeyedArena::<Cell, LOW_BITS, PAGE_SIZE>::with_key(
-        Key::from_seed(0x67_1F),
-    );
+    let mut arena = PagedKeyedArena::<Cell, LOW_BITS, PAGE_SIZE>::with_key(Key::from_seed(0x67_1F));
     let old_handles: Vec<_> = (0..PAGE_SIZE)
         .map(|value| {
             arena
@@ -181,17 +175,14 @@ fn keyed_page_capability_amortizes_validation_and_transitions_live_entries() {
     assert_eq!(arena.validate_page_handle(page).expect("valid page"), 0);
 
     arena
-        .try_visit_page_mut::<KeyedArenaError, _>(
-            page,
-            |_index, cell, _selector, _prophecy| {
-                cell.0 += 100;
-                Ok(PagedEntryAction::Transition {
-                    tag: 3,
-                    selector: DONE,
-                    prophecy: prophecy(true),
-                })
-            },
-        )
+        .try_visit_page_mut::<KeyedArenaError, _>(page, |_index, cell, _selector, _prophecy| {
+            cell.0 += 100;
+            Ok(PagedEntryAction::Transition {
+                tag: 3,
+                selector: DONE,
+                prophecy: prophecy(true),
+            })
+        })
         .expect("page kernel");
 
     for (index, old) in old_handles.into_iter().enumerate() {
@@ -199,15 +190,16 @@ fn keyed_page_capability_amortizes_validation_and_transitions_live_entries() {
         let refreshed = arena.handle_at(index).expect("refreshed entry handle");
         assert_eq!(refreshed.tag(), 3);
         assert_eq!(refreshed.selector(), DONE);
-        assert_eq!(arena.get(refreshed).expect("refreshed get").0, index as u64 + 100);
+        assert_eq!(
+            arena.get(refreshed).expect("refreshed get").0,
+            index as u64 + 100
+        );
     }
 }
 
 #[test]
 fn retained_page_reset_invalidates_old_page_capabilities() {
-    let mut arena = PagedKeyedArena::<Cell, LOW_BITS, PAGE_SIZE>::with_key(
-        Key::from_seed(0x67_20),
-    );
+    let mut arena = PagedKeyedArena::<Cell, LOW_BITS, PAGE_SIZE>::with_key(Key::from_seed(0x67_20));
     arena
         .insert(Cell(1), 1, READY, prophecy(false))
         .expect("insert");

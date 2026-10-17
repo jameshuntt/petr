@@ -6,5 +6,10 @@ fn main() {
     let write_method = 0x42;
     let selector = SelectorWord::new(encryptor_trait, aes_impl, write_method);
     println!("raw={:#06x}", selector.raw());
-    println!("trait={} impl={} function={:#04x}", selector.trait_id(), selector.impl_id(), selector.function_id());
+    println!(
+        "trait={} impl={} function={:#04x}",
+        selector.trait_id(),
+        selector.impl_id(),
+        selector.function_id()
+    );
 }

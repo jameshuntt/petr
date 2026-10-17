@@ -1,4 +1,4 @@
-use petr_dispatch::{default_dense_table, OpFrame};
+use petr_dispatch::{OpFrame, default_dense_table};
 
 fn main() {
     let table = default_dense_table();
@@ -7,6 +7,9 @@ fn main() {
     for selector in [0x20, 0x01, 0x02, 0x99] {
         let before = frame.clone();
         frame = table.execute(selector, frame).unwrap();
-        println!("selector=0x{selector:02x} op={} before={before:?} after={frame:?}", table.name(selector));
+        println!(
+            "selector=0x{selector:02x} op={} before={before:?} after={frame:?}",
+            table.name(selector)
+        );
     }
 }

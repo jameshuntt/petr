@@ -1,0 +1,14 @@
+[package]
+name = "petr-temporal"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Temporal eligibility, phase clocks, cyclic execution and provenance-preserving temporal pointer authority for PETR."
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "../../README.md"
+
+[dependencies]
+petr-core = { path = "../petr-core", version = "0.2.0" }
+thiserror = { workspace = true }

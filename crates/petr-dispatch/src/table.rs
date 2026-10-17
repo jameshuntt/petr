@@ -13,10 +13,20 @@ pub struct OpFrame {
 
 impl OpFrame {
     /// Create a new frame from text.
-    pub fn text(text: impl Into<String>) -> Self { Self { text: text.into(), acc: 0 } }
+    pub fn text(text: impl Into<String>) -> Self {
+        Self {
+            text: text.into(),
+            acc: 0,
+        }
+    }
 
     /// Create a new frame from an accumulator value.
-    pub fn acc(acc: i64) -> Self { Self { text: String::new(), acc } }
+    pub fn acc(acc: i64) -> Self {
+        Self {
+            text: String::new(),
+            acc,
+        }
+    }
 }
 
 /// Dynamic operation argument.
@@ -30,10 +40,20 @@ pub struct OpArg {
 
 impl OpArg {
     /// Build a numeric argument.
-    pub fn n(n: i64) -> Self { Self { n, text: String::new() } }
+    pub fn n(n: i64) -> Self {
+        Self {
+            n,
+            text: String::new(),
+        }
+    }
 
     /// Build a text argument.
-    pub fn text(text: impl Into<String>) -> Self { Self { n: 0, text: text.into() } }
+    pub fn text(text: impl Into<String>) -> Self {
+        Self {
+            n: 0,
+            text: text.into(),
+        }
+    }
 }
 
 /// Function pointer used by the dispatch table.
@@ -52,7 +72,10 @@ pub struct OpEntry {
 
 impl core::fmt::Debug for OpEntry {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.debug_struct("OpEntry").field("name", &self.name).field("arg", &self.arg).finish()
+        f.debug_struct("OpEntry")
+            .field("name", &self.name)
+            .field("arg", &self.arg)
+            .finish()
     }
 }
 
@@ -63,20 +86,36 @@ pub struct OperationTable {
 }
 
 impl Default for OperationTable {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl OperationTable {
     /// Create an empty 256-entry table.
-    pub fn new() -> Self { Self { entries: vec![None; 256] } }
+    pub fn new() -> Self {
+        Self {
+            entries: vec![None; 256],
+        }
+    }
 
     /// Register an operation at a raw byte selector.
     pub fn register(&mut self, selector: u8, name: impl Into<String>, func: OpFn, arg: OpArg) {
-        self.entries[selector as usize] = Some(OpEntry { func, arg, name: name.into() });
+        self.entries[selector as usize] = Some(OpEntry {
+            func,
+            arg,
+            name: name.into(),
+        });
     }
 
     /// Register using a 4/4/8 selector word.
-    pub fn register_word(&mut self, selector: SelectorWord, name: impl Into<String>, func: OpFn, arg: OpArg) {
+    pub fn register_word(
+        &mut self,
+        selector: SelectorWord,
+        name: impl Into<String>,
+        func: OpFn,
+        arg: OpArg,
+    ) {
         self.register(selector.function_id(), name, func, arg);
     }
 
@@ -106,5 +145,7 @@ impl OperationTable {
     }
 
     /// Return true when an entry is registered.
-    pub fn contains(&self, selector: u8) -> bool { self.entries[selector as usize].is_some() }
+    pub fn contains(&self, selector: u8) -> bool {
+        self.entries[selector as usize].is_some()
+    }
 }

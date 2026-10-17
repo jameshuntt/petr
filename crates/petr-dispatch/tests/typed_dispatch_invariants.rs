@@ -1,5 +1,5 @@
-use petr_dispatch::TypedDenseOperationTable;
 use petr_core::SelectorWord;
+use petr_dispatch::TypedDenseOperationTable;
 
 #[derive(Debug, Default, PartialEq, Eq)]
 struct State {
@@ -11,7 +11,9 @@ struct Context {
     delta: i64,
 }
 
-fn nop(_state: &mut State, _context: &Context) -> Result<(), &'static str> { Ok(()) }
+fn nop(_state: &mut State, _context: &Context) -> Result<(), &'static str> {
+    Ok(())
+}
 
 fn add(state: &mut State, context: &Context) -> Result<(), &'static str> {
     state.value += context.delta;
@@ -25,9 +27,13 @@ fn typed_dense_table_routes_application_state_by_selector_word() {
     table.register_word(selector, add);
 
     let mut state = State::default();
-    table.execute_word(selector, &mut state, &Context { delta: 7 }).unwrap();
+    table
+        .execute_word(selector, &mut state, &Context { delta: 7 })
+        .unwrap();
     assert_eq!(state, State { value: 7 });
 
-    table.execute(0x99, &mut state, &Context { delta: 100 }).unwrap();
+    table
+        .execute(0x99, &mut state, &Context { delta: 100 })
+        .unwrap();
     assert_eq!(state, State { value: 7 });
 }

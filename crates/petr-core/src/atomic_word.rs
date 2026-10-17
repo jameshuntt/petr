@@ -11,13 +11,21 @@ pub struct AtomicTaggedWord {
 
 impl AtomicTaggedWord {
     /// Create a new atomic word.
-    pub const fn new(word: usize) -> Self { Self { word: AtomicUsize::new(word) } }
+    pub const fn new(word: usize) -> Self {
+        Self {
+            word: AtomicUsize::new(word),
+        }
+    }
 
     /// Load the word.
-    pub fn load(&self, ordering: Ordering) -> usize { self.word.load(ordering) }
+    pub fn load(&self, ordering: Ordering) -> usize {
+        self.word.load(ordering)
+    }
 
     /// Store the word.
-    pub fn store(&self, word: usize, ordering: Ordering) { self.word.store(word, ordering); }
+    pub fn store(&self, word: usize, ordering: Ordering) {
+        self.word.store(word, ordering);
+    }
 
     /// Compare-and-exchange the word.
     pub fn compare_exchange(

@@ -1,0 +1,23 @@
+[package]
+name = "petr-hw"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Experimental AArch64 pointer-authentication and memory-tagging adapters for PETR, with portable software models."
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "../../README.md"
+
+[dependencies]
+petr-protection = { path = "../petr-protection", version = "0.2.0" }
+petr-core = { path = "../petr-core", version = "0.2.0" }
+thiserror = { workspace = true }
+
+[features]
+default = []
+aarch64-pac = []
+aarch64-mte = []
+
+[package.metadata.docs.rs]
+all-features = true

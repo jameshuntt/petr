@@ -45,13 +45,19 @@ impl ResidualRouter {
         if modulus == 0 {
             return Err(TagError::ZeroModulus);
         }
-        Ok(Self { modulus, selectors: vec![0; modulus] })
+        Ok(Self {
+            modulus,
+            selectors: vec![0; modulus],
+        })
     }
 
     /// Assign a selector for one residue.
     pub fn set(mut self, residue: usize, selector: u8) -> TagResult<Self> {
         if residue >= self.modulus {
-            return Err(TagError::BadResidue { modulus: self.modulus, residue });
+            return Err(TagError::BadResidue {
+                modulus: self.modulus,
+                residue,
+            });
         }
         self.selectors[residue] = selector;
         Ok(self)
@@ -63,5 +69,7 @@ impl ResidualRouter {
     }
 
     /// Return the configured modulus.
-    pub const fn modulus(&self) -> usize { self.modulus }
+    pub const fn modulus(&self) -> usize {
+        self.modulus
+    }
 }

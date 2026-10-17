@@ -3,20 +3,31 @@ name = "petr"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "Facade for the petr tagged-pointer crates: core, dispatch, collections, resource, math and spatial."
+description = "Facade for PETR tagged-pointer, protection, dispatch, collection, resource, temporal, affinity and execution primitives."
 repository.workspace = true
 keywords.workspace = true
 categories.workspace = true
 readme = "../../README.md"
 
 [dependencies]
-petr-core = { path = "../petr-core", version = "0.1.0" }
-petr-dispatch = { path = "../petr-dispatch", version = "0.1.0" }
-petr-collections = { path = "../petr-collections", version = "0.1.0" }
-petr-resource = { path = "../petr-resource", version = "0.1.0" }
-petr-math = { path = "../petr-math", version = "0.1.0" }
-petr-spatial = { path = "../petr-spatial", version = "0.1.0" }
+petr-core = { path = "../petr-core", version = "0.2.0" }
+petr-dispatch = { path = "../petr-dispatch", version = "0.2.0" }
+petr-collections = { path = "../petr-collections", version = "0.2.0" }
+petr-resource = { path = "../petr-resource", version = "0.2.0" }
+petr-protection = { path = "../petr-protection", version = "0.2.0" }
+petr-temporal = { path = "../petr-temporal", version = "0.2.0" }
+petr-affinity = { path = "../petr-affinity", version = "0.2.0" }
+petr-execution = { path = "../petr-execution", version = "0.2.0" }
+petr-hw = { path = "../petr-hw", version = "0.2.0", optional = true }
+petr-math = { path = "../petr-math", version = "0.2.0" }
+petr-spatial = { path = "../petr-spatial", version = "0.2.0" }
 
 [features]
 default = []
+core-affinity = ["petr-affinity/core-affinity", "petr-execution/core-affinity"]
 serde = ["petr-core/serde", "petr-collections/serde"]
+execution-adapters = ["petr-execution/adapters"]
+hardware-experiments = ["dep:petr-hw"]
+
+[package.metadata.docs.rs]
+all-features = true

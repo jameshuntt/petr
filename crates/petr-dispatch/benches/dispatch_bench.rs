@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use petr_dispatch::{default_table, DenseOpArg, DenseOperationTable, OpFrame, OperationTable};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
+use petr_dispatch::{DenseOpArg, DenseOperationTable, OpFrame, OperationTable, default_table};
 
 fn match_4(selector: u8, mut frame: OpFrame) -> OpFrame {
     match selector {
@@ -52,14 +52,24 @@ fn build_hash_table() -> HashMap<u8, fn(OpFrame) -> OpFrame> {
 
 fn build_acc_dense() -> DenseOperationTable {
     let mut table = DenseOperationTable::new();
-    table.register(0x32, "acc_sub3", |mut frame, _arg| {
-        frame.acc -= 3;
-        Ok(frame)
-    }, DenseOpArg::ZERO);
-    table.register(0x33, "acc_xor", |mut frame, _arg| {
-        frame.acc ^= 0x55;
-        Ok(frame)
-    }, DenseOpArg::ZERO);
+    table.register(
+        0x32,
+        "acc_sub3",
+        |mut frame, _arg| {
+            frame.acc -= 3;
+            Ok(frame)
+        },
+        DenseOpArg::ZERO,
+    );
+    table.register(
+        0x33,
+        "acc_xor",
+        |mut frame, _arg| {
+            frame.acc ^= 0x55;
+            Ok(frame)
+        },
+        DenseOpArg::ZERO,
+    );
     table
 }
 
@@ -83,12 +93,18 @@ fn bench_batch_option(table: &OperationTable, selectors: &[u8], mut frame: OpFra
 
 fn bench_batch_dense(table: &DenseOperationTable, selectors: &[u8], mut frame: OpFrame) -> OpFrame {
     for selector in selectors {
-        frame = table.execute(black_box(*selector), black_box(frame)).unwrap();
+        frame = table
+            .execute(black_box(*selector), black_box(frame))
+            .unwrap();
     }
     frame
 }
 
-fn bench_batch_hash(map: &HashMap<u8, fn(OpFrame) -> OpFrame>, selectors: &[u8], mut frame: OpFrame) -> OpFrame {
+fn bench_batch_hash(
+    map: &HashMap<u8, fn(OpFrame) -> OpFrame>,
+    selectors: &[u8],
+    mut frame: OpFrame,
+) -> OpFrame {
     for selector in selectors {
         if let Some(func) = map.get(selector) {
             frame = func(black_box(frame));

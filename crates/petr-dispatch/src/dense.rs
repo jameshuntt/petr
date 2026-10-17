@@ -17,10 +17,14 @@ impl DenseOpArg {
     pub const ZERO: Self = Self { n: 0, text: "" };
 
     /// Numeric argument.
-    pub const fn n(n: i64) -> Self { Self { n, text: "" } }
+    pub const fn n(n: i64) -> Self {
+        Self { n, text: "" }
+    }
 
     /// Text argument.
-    pub const fn text(text: &'static str) -> Self { Self { n: 0, text } }
+    pub const fn text(text: &'static str) -> Self {
+        Self { n: 0, text }
+    }
 }
 
 /// Function pointer used by the dense dispatch table.
@@ -47,7 +51,9 @@ impl core::fmt::Debug for DenseOpEntry {
 }
 
 /// NOP operation for missing selectors.
-pub fn dense_nop(frame: OpFrame, _arg: DenseOpArg) -> DispatchResult<OpFrame> { Ok(frame) }
+pub fn dense_nop(frame: OpFrame, _arg: DenseOpArg) -> DispatchResult<OpFrame> {
+    Ok(frame)
+}
 
 /// Prefix text with a static argument.
 pub fn dense_add_prefix(mut frame: OpFrame, arg: DenseOpArg) -> DispatchResult<OpFrame> {
@@ -102,12 +108,18 @@ pub struct DenseOperationTable {
 }
 
 impl Default for DenseOperationTable {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl DenseOperationTable {
     /// Create a dense table full of NOP entries.
-    pub fn new() -> Self { Self { entries: [NOP_ENTRY; 256] } }
+    pub fn new() -> Self {
+        Self {
+            entries: [NOP_ENTRY; 256],
+        }
+    }
 
     /// Register a selector.
     pub fn register(&mut self, selector: u8, name: &'static str, func: DenseOpFn, arg: DenseOpArg) {
@@ -121,14 +133,26 @@ impl DenseOperationTable {
     }
 
     /// Return the static operation name registered for a selector.
-    pub fn name(&self, selector: u8) -> &'static str { self.entries[selector as usize].name }
+    pub fn name(&self, selector: u8) -> &'static str {
+        self.entries[selector as usize].name
+    }
 }
 
 /// Install a useful dense table.
 pub fn default_dense_table() -> DenseOperationTable {
     let mut table = DenseOperationTable::new();
-    table.register(0x01, "add_prefix", dense_add_prefix, DenseOpArg::text("Prefix_"));
-    table.register(0x02, "add_suffix", dense_add_suffix, DenseOpArg::text("_Suffix"));
+    table.register(
+        0x01,
+        "add_prefix",
+        dense_add_prefix,
+        DenseOpArg::text("Prefix_"),
+    );
+    table.register(
+        0x02,
+        "add_suffix",
+        dense_add_suffix,
+        DenseOpArg::text("_Suffix"),
+    );
     table.register(0x20, "octet_encode", dense_octet_encode, DenseOpArg::ZERO);
     table.register(0x30, "acc_add", dense_acc_add, DenseOpArg::n(1));
     table.register(0x31, "acc_mul", dense_acc_mul, DenseOpArg::n(2));

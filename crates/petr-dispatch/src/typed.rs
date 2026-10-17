@@ -5,8 +5,7 @@ use petr_core::SelectorWord;
 /// Unlike [`crate::OperationTable`], this form is not coupled to `OpFrame`.
 /// It can mutate an application-owned state value while reading an immutable
 /// execution context.
-pub type TypedDenseOpFn<State, Context, Error> =
-    fn(&mut State, &Context) -> Result<(), Error>;
+pub type TypedDenseOpFn<State, Context, Error> = fn(&mut State, &Context) -> Result<(), Error>;
 
 /// Fixed 256-slot selector table for application-specific state machines.
 ///
@@ -17,9 +16,7 @@ pub struct TypedDenseOperationTable<State, Context, Error> {
     entries: [TypedDenseOpFn<State, Context, Error>; 256],
 }
 
-impl<State, Context, Error> core::fmt::Debug
-    for TypedDenseOperationTable<State, Context, Error>
-{
+impl<State, Context, Error> core::fmt::Debug for TypedDenseOperationTable<State, Context, Error> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("TypedDenseOperationTable")
             .field("slots", &self.entries.len())
@@ -27,26 +24,24 @@ impl<State, Context, Error> core::fmt::Debug
     }
 }
 
-impl<State, Context, Error> Clone
-    for TypedDenseOperationTable<State, Context, Error>
-{
+impl<State, Context, Error> Clone for TypedDenseOperationTable<State, Context, Error> {
     fn clone(&self) -> Self {
-        Self { entries: self.entries }
+        Self {
+            entries: self.entries,
+        }
     }
 }
 
 impl<State, Context, Error> TypedDenseOperationTable<State, Context, Error> {
     /// Create a table with all selectors bound to `fallback`.
     pub fn new(fallback: TypedDenseOpFn<State, Context, Error>) -> Self {
-        Self { entries: [fallback; 256] }
+        Self {
+            entries: [fallback; 256],
+        }
     }
 
     /// Register an application operation at a raw byte selector.
-    pub fn register(
-        &mut self,
-        selector: u8,
-        operation: TypedDenseOpFn<State, Context, Error>,
-    ) {
+    pub fn register(&mut self, selector: u8, operation: TypedDenseOpFn<State, Context, Error>) {
         self.entries[selector as usize] = operation;
     }
 
@@ -60,12 +55,7 @@ impl<State, Context, Error> TypedDenseOperationTable<State, Context, Error> {
     }
 
     /// Execute by raw selector.
-    pub fn execute(
-        &self,
-        selector: u8,
-        state: &mut State,
-        context: &Context,
-    ) -> Result<(), Error> {
+    pub fn execute(&self, selector: u8, state: &mut State, context: &Context) -> Result<(), Error> {
         (self.entries[selector as usize])(state, context)
     }
 

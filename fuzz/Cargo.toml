@@ -7,11 +7,20 @@ publish = false
 [package.metadata]
 cargo-fuzz = true
 
+# Keep cargo-fuzz isolated from any unrelated ancestor Cargo.toml.
+[workspace]
+members = ["."]
+resolver = "2"
+
 [dependencies]
 libfuzzer-sys = "0.4"
 petr-core = { path = "../crates/petr-core" }
 petr-dispatch = { path = "../crates/petr-dispatch" }
 petr-collections = { path = "../crates/petr-collections" }
+petr-execution = { path = "../crates/petr-execution" }
+petr-affinity = { path = "../crates/petr-affinity" }
+petr-resource = { path = "../crates/petr-resource" }
+petr-temporal = { path = "../crates/petr-temporal" }
 
 [[bin]]
 name = "selector_word_decode"
@@ -30,6 +39,20 @@ bench = false
 [[bin]]
 name = "encoded_handle_decode"
 path = "fuzz_targets/encoded_handle_decode.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "execution_authority_sequences"
+path = "fuzz_targets/execution_authority_sequences.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "resource_handle_sequences"
+path = "fuzz_targets/resource_handle_sequences.rs"
 test = false
 doc = false
 bench = false

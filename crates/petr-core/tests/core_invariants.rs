@@ -1,10 +1,10 @@
 use core::ptr::NonNull;
+use petr_core::{
+    Key, KeyedTaggedNonNull, LowTagLayout, PortHint, ProphecyBits, ResidualClass, ResidualRouter,
+    SelectorWord, SplitTaggedNonNull, TagError, TaggedNonNull, ValueWord,
+};
 use proptest::prelude::any;
 use proptest::*;
-use petr_core::{
-    Key, KeyedTaggedNonNull, LowTagLayout, PortHint, ProphecyBits, ResidualClass,
-    ResidualRouter, SelectorWord, SplitTaggedNonNull, TagError, TaggedNonNull, ValueWord,
-};
 
 #[repr(align(64))]
 #[derive(Debug, PartialEq, Eq)]
@@ -38,7 +38,10 @@ fn low_tag_validation_accepts_exact_range_and_rejects_overflow() {
 
     assert_eq!(
         LowTagLayout::<4>::validate_tag(0b1_0000).unwrap_err(),
-        TagError::TagTooLarge { tag: 0b1_0000, mask: 0b1111 }
+        TagError::TagTooLarge {
+            tag: 0b1_0000,
+            mask: 0b1111
+        }
     );
 
     assert_eq!(
@@ -49,14 +52,7 @@ fn low_tag_validation_accepts_exact_range_and_rejects_overflow() {
 
 #[test]
 fn clean_word_and_low_tag_partition_the_word_without_overlap() {
-    const WORDS: &[usize] = &[
-        0x0,
-        0x1,
-        0x7,
-        0x8,
-        0x1234_5678,
-        0xFFFF_FFFF_FFFF_FFFFusize,
-    ];
+    const WORDS: &[usize] = &[0x0, 0x1, 0x7, 0x8, 0x1234_5678, 0xFFFF_FFFF_FFFF_FFFFusize];
 
     for &word in WORDS {
         let clean = LowTagLayout::<3>::clean_word(word);
@@ -97,8 +93,17 @@ fn tagged_non_null_from_word_roundtrips_nonzero_clean_words_and_rejects_zero() {
     assert_eq!(ok.tag(), 0b111);
     assert_eq!(ok.clean_addr(), addr);
 
-    assert_eq!(TaggedNonNull::<Aligned64, 3>::from_word(0b111).unwrap_err(), TagError::NullAddress);
-    assert_eq!(LowTagLayout::<3>::validate_addr(addr + 4).unwrap_err(), TagError::Misaligned { addr: addr + 4, align: 8 });
+    assert_eq!(
+        TaggedNonNull::<Aligned64, 3>::from_word(0b111).unwrap_err(),
+        TagError::NullAddress
+    );
+    assert_eq!(
+        LowTagLayout::<3>::validate_addr(addr + 4).unwrap_err(),
+        TagError::Misaligned {
+            addr: addr + 4,
+            align: 8
+        }
+    );
 }
 
 #[test]
@@ -126,11 +131,22 @@ fn split_tagged_pointer_roundtrips_head_tail_and_clean_body() {
             assert_eq!(split.low(), low);
             assert_eq!(split.clean_addr(), clean_addr);
             assert_eq!(split.clean().as_ptr(), ptr.as_ptr());
-            assert_eq!(SplitTaggedNonNull::<Aligned64, 4>::from_word(split.word()).unwrap().word(), split.word());
+            assert_eq!(
+                SplitTaggedNonNull::<Aligned64, 4>::from_word(split.word())
+                    .unwrap()
+                    .word(),
+                split.word()
+            );
         }
     }
 
-    assert_eq!(SplitTaggedNonNull::<Aligned64, 4>::from_word(0xFFusize << SplitTaggedNonNull::<Aligned64, 4>::TOP_SHIFT).unwrap_err(), TagError::NullAddress);
+    assert_eq!(
+        SplitTaggedNonNull::<Aligned64, 4>::from_word(
+            0xFFusize << SplitTaggedNonNull::<Aligned64, 4>::TOP_SHIFT
+        )
+        .unwrap_err(),
+        TagError::NullAddress
+    );
 }
 
 #[test]
@@ -188,7 +204,10 @@ fn residual_classes_validate_moduli_and_route_by_remainder() {
     assert_eq!(ResidualClass::new(0, 0).unwrap_err(), TagError::ZeroModulus);
     assert_eq!(
         ResidualClass::new(7, 7).unwrap_err(),
-        TagError::BadResidue { modulus: 7, residue: 7 }
+        TagError::BadResidue {
+            modulus: 7,
+            residue: 7
+        }
     );
 
     let class = ResidualClass::new(7, 3).unwrap();
@@ -205,7 +224,13 @@ fn residual_classes_validate_moduli_and_route_by_remainder() {
     assert_eq!(router.modulus(), 5);
     assert_eq!(router.selector_for(25), 0x10);
     assert_eq!(router.selector_for(29), 0x44);
-    assert_eq!(ResidualRouter::new(3).unwrap().set(3, 0xFF).unwrap_err(), TagError::BadResidue { modulus: 3, residue: 3 });
+    assert_eq!(
+        ResidualRouter::new(3).unwrap().set(3, 0xFF).unwrap_err(),
+        TagError::BadResidue {
+            modulus: 3,
+            residue: 3
+        }
+    );
 }
 
 #[test]
@@ -259,11 +284,10 @@ fn value_word_immediate_and_handle_encodings_are_disjoint() {
     assert_eq!(handle.raw() & 1, 0);
 }
 
-
 #[test]
 fn atomic_tagged_word_load_store_and_compare_exchange_are_exact() {
-    use std::sync::atomic::Ordering;
     use petr_core::AtomicTaggedWord;
+    use std::sync::atomic::Ordering;
 
     let word = AtomicTaggedWord::new(0x10);
     assert_eq!(word.load(Ordering::SeqCst), 0x10);
@@ -271,9 +295,15 @@ fn atomic_tagged_word_load_store_and_compare_exchange_are_exact() {
     word.store(0x20, Ordering::SeqCst);
     assert_eq!(word.load(Ordering::SeqCst), 0x20);
 
-    assert_eq!(word.compare_exchange(0x20, 0x30, Ordering::SeqCst, Ordering::SeqCst), Ok(0x20));
+    assert_eq!(
+        word.compare_exchange(0x20, 0x30, Ordering::SeqCst, Ordering::SeqCst),
+        Ok(0x20)
+    );
     assert_eq!(word.load(Ordering::SeqCst), 0x30);
-    assert_eq!(word.compare_exchange(0x20, 0x40, Ordering::SeqCst, Ordering::SeqCst), Err(0x30));
+    assert_eq!(
+        word.compare_exchange(0x20, 0x40, Ordering::SeqCst, Ordering::SeqCst),
+        Err(0x30)
+    );
     assert_eq!(word.load(Ordering::SeqCst), 0x30);
 }
 

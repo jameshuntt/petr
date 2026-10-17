@@ -20,7 +20,9 @@ pub struct SplitTaggedNonNull<T: ?Sized, const LOW_BITS: usize> {
 
 impl<T: ?Sized, const LOW_BITS: usize> Copy for SplitTaggedNonNull<T, LOW_BITS> {}
 impl<T: ?Sized, const LOW_BITS: usize> Clone for SplitTaggedNonNull<T, LOW_BITS> {
-    fn clone(&self) -> Self { *self }
+    fn clone(&self) -> Self {
+        *self
+    }
 }
 
 impl<T, const LOW_BITS: usize> SplitTaggedNonNull<T, LOW_BITS> {
@@ -59,28 +61,46 @@ impl<T, const LOW_BITS: usize> SplitTaggedNonNull<T, LOW_BITS> {
     }
 
     /// Return the full software word.
-    pub fn word(self) -> usize { ((self.top as usize) << Self::TOP_SHIFT) | self.clean_addr() | self.low }
+    pub fn word(self) -> usize {
+        ((self.top as usize) << Self::TOP_SHIFT) | self.clean_addr() | self.low
+    }
 
     /// Return the top/head byte.
-    pub const fn top(self) -> u8 { self.top }
+    pub const fn top(self) -> u8 {
+        self.top
+    }
 
     /// Return the low/tail tag.
-    pub const fn low(self) -> usize { self.low }
+    pub const fn low(self) -> usize {
+        self.low
+    }
 
     /// Return the clean address with top and low tags removed.
-    pub fn clean_addr(self) -> usize { self.ptr.as_ptr() as usize }
+    pub fn clean_addr(self) -> usize {
+        self.ptr.as_ptr() as usize
+    }
 
     /// Return the cleaned pointer while preserving provenance when available.
-    pub const fn clean(self) -> NonNull<T> { self.ptr }
+    pub const fn clean(self) -> NonNull<T> {
+        self.ptr
+    }
 
     /// Change the top/head tag.
     pub fn with_top(self, top: u8) -> TagResult<Self> {
-        Ok(Self { ptr: self.ptr, top, low: self.low })
+        Ok(Self {
+            ptr: self.ptr,
+            top,
+            low: self.low,
+        })
     }
 
     /// Change the low/tail tag.
     pub fn with_low(self, low: usize) -> TagResult<Self> {
         LowTagLayout::<LOW_BITS>::validate_tag(low)?;
-        Ok(Self { ptr: self.ptr, top: self.top, low })
+        Ok(Self {
+            ptr: self.ptr,
+            top: self.top,
+            low,
+        })
     }
 }

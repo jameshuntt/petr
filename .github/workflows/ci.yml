@@ -1,0 +1,155 @@
+# The V13.1 gates (TEST_CLOSEOUT.command and the scripts it runs), mapped onto the same jobs as
+# scope and ob-serve-a-bowl. A `v*` tag publishes, after test, arm, miri, loom and fuzz pass,
+# through crates.io trusted publishing: no stored token.
+name: ci
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  schedule:
+    # Weekly: the newest compatible dependency versions, which is what a new user of the crates gets.
+    - cron: "17 6 * * 1"
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --all -- --check
+      - run: cargo test --workspace --all-targets --locked
+      - run: cargo test -p petr --all-features --locked
+      - run: cargo test -p petr-execution --all-features --locked
+      - name: Hardening (TEST_HARDENING.command, the PETR part)
+        run: |
+          cargo test -p petr-execution --features adapters --locked
+          cargo test -p petr-affinity --features core-affinity --locked
+          cargo test -p petr-execution --release --test hardening --locked
+      - run: cargo check -p petr-execution --examples --features adapters --locked
+      - run: cargo check --workspace --all-targets --all-features --locked
+      - name: No higher-layer dependency in any PETR manifest (TEST_CLOSEOUT.command)
+        run: |
+          FORBIDDEN='sidecar_core|packet_contract|service_modes_core|balancing_engine|nodeplan_|(^|[^A-Za-z0-9_-])mine([^A-Za-z0-9_-]|$)|(^|[^A-Za-z0-9_-])abut([^A-Za-z0-9_-]|$)|file_recipe|pathgen|classified|(^|[^A-Za-z0-9_-])recipe([^A-Za-z0-9_-]|$)'
+          if grep -RInE "$FORBIDDEN" Cargo.toml crates/*/Cargo.toml; then
+            echo "PETR boundary violation: forbidden higher-layer dependency found in a manifest."
+            exit 1
+          fi
+      - name: Build every publishable package (TEST_RELEASE.command)
+        run: cargo package --workspace --exclude petr-py-bridge --exclude petr-examples --no-verify --registry crates-io
+
+  arm:
+    # petr-hw's AArch64 pointer-authentication and memory-tagging code only compiles on aarch64.
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test --workspace --all-targets --locked
+      - run: cargo check --workspace --all-targets --all-features --locked
+
+  miri:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: miri
+      - run: cargo +nightly miri setup
+      - name: TEST_MIRI.command (the PETR tests), plain and with strict provenance
+        env:
+          PROPTEST_DISABLE_FAILURE_PERSISTENCE: "1"
+        run: |
+          for flags in "" "-Zmiri-strict-provenance"; do
+            echo "== MIRIFLAGS='$flags'"
+            export MIRIFLAGS="$flags"
+            cargo +nightly miri test -p petr-core --test core_invariants tagged_non_null_roundtrips_all_low_tags_and_never_derefs_dirty_word -- --exact
+            cargo +nightly miri test -p petr-core --test core_invariants keyed_pointers_keep_low_tags_visible_and_mask_clean_addresses -- --exact
+            cargo +nightly miri test -p petr-collections --test collection_invariants keyed_arena_insert_get_mut_remove_and_reuse_slots_with_generations -- --exact
+            cargo +nightly miri test -p petr-collections --test paged_arena_invariants reset_and_clear_drop_each_initialized_value_exactly_once -- --exact
+          done
+
+  loom:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: TEST_LOOM.command (the PETR authority models)
+        run: cargo test -p petr-execution --test loom_authority --release --locked
+        env:
+          RUSTFLAGS: --cfg loom -D warnings
+
+  fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - run: cargo install cargo-fuzz --locked
+      - name: TEST_FUZZ.command, 60 seconds per target
+        run: |
+          for target in selector_word_decode toml_operation_config encoded_handle_decode execution_authority_sequences resource_handle_sequences; do
+            cargo +nightly fuzz run "$target" -- -max_total_time=60 || exit 1
+          done
+
+  latest-deps:
+    # Not a publish gate: a third-party release should not block a tag, but it should show up here.
+    if: github.event_name == 'schedule' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo update
+      - run: cargo test --workspace --all-targets
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [test, arm, miri, loom, fuzz]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      # Dependency order from PUBLISHING.md. Held: petr-execution and the petr facade.
+      # petr-py-bridge and petr-examples are publish = false.
+      CRATES: petr-core petr-protection petr-dispatch petr-collections petr-resource petr-temporal petr-affinity petr-math petr-spatial petr-hw
+    steps:
+      # Pinned to commits: this job can get a crates.io token. The runner's own stable cargo is used.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Tag matches the workspace version, and CHANGELOG.md has its entry
+        run: |
+          version=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "petr-core") | .version')
+          test "v$version" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME != v$version"; exit 1; }
+          grep -qF "## $version (" CHANGELOG.md || { echo "CHANGELOG.md has no '## $version (date)' entry"; exit 1; }
+      - uses: rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18 # v1
+        id: auth
+      - name: Publish each crate whose version is not on crates.io yet
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+        run: |
+          ua="github.com/${GITHUB_REPOSITORY} CI"
+          new=""
+          for c in $CRATES; do
+            v=$(cargo metadata --no-deps --format-version 1 | jq -r --arg c "$c" '.packages[] | select(.name == $c) | .version')
+            case $(curl -s -o /dev/null -w '%{http_code}' -A "$ua" "https://crates.io/api/v1/crates/$c/$v") in
+              200) echo "$c $v is already on crates.io; skipping."; continue ;;
+              404) ;;
+              *) echo "crates.io did not answer for $c $v"; exit 1 ;;
+            esac
+            # Trusted publishing can only be set up for a crate that already exists, so the
+            # first release of a new crate name is published once by an owner, not here.
+            if [ "$(curl -s -o /dev/null -w '%{http_code}' -A "$ua" "https://crates.io/api/v1/crates/$c")" = 404 ]; then
+              echo "$c is a new crate name; its first release needs an owner's cargo publish."
+              new="$new $c"
+              continue
+            fi
+            cargo publish -p "$c" --locked
+          done
+          if [ -n "$new" ]; then echo "Not published, new crate names:$new"; exit 1; fi

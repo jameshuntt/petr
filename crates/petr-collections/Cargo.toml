@@ -9,8 +9,8 @@ keywords.workspace = true
 categories.workspace = true
 readme = "../../README.md"
 [dependencies]
-petr-core = { path = "../petr-core", version = "0.1.0" }
-petr-dispatch = { path = "../petr-dispatch", version = "0.1.0" }
+petr-core = { path = "../petr-core", version = "0.2.0" }
+petr-dispatch = { path = "../petr-dispatch", version = "0.2.0" }
 
 thiserror = { workspace = true }
 serde = { workspace = true, optional = true }

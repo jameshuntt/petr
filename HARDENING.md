@@ -68,3 +68,23 @@ The primitive pointer wrappers now separate two cases:
 `TaggedNonNull` and `SplitTaggedNonNull` preserve provenance on the normal `new`/`from_mut` paths. `KeyedTaggedNonNull::new` also keeps the original pointer provenance, while `from_stored_word` is intentionally documented as a raw/check-word constructor.
 
 This means the collection layer can remain strict-provenance clean: hardened containers dereference their owned `Box<T>`/`NonNull<T>` storage and use masked words only for validation.
+
+## Execution hardening
+
+The V3 execution pass added adversarial coverage around the composition layer
+without changing the independent owners underneath it:
+
+- duplicate handler insertion is atomic;
+- required resource admission precedes opportunistic admission;
+- partial required-admission failures roll back acquired resources;
+- scoped task cancellation and panic reclaim resource leases;
+- dependency fan-in remains closed until every prerequisite completes;
+- same-tick profile transitions replace rather than stack;
+- long logical schedules never double-book a CPU;
+- the same immutable plan replays identically from multiple OS threads;
+- temporal one-hot windows and affinity fallback are exhaustively checked over
+  their supported small state spaces.
+
+The integration harness separately checks the optional dispatch,
+waker-protocol, and observable bridges so those adapters do not have to become
+mandatory PETR dependencies.

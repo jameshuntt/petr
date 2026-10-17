@@ -15,7 +15,11 @@ impl<const LOW_BITS: usize> LowTagLayout<LOW_BITS> {
     pub const ALIGN: usize = 1usize << LOW_BITS;
 
     /// Mask covering the low tag bits.
-    pub const LOW_MASK: usize = if LOW_BITS == 0 { 0 } else { (1usize << LOW_BITS) - 1 };
+    pub const LOW_MASK: usize = if LOW_BITS == 0 {
+        0
+    } else {
+        (1usize << LOW_BITS) - 1
+    };
 
     /// Mask covering the clean pointer region after low tag bits are stripped.
     pub const CLEAN_MASK: usize = !Self::LOW_MASK;
@@ -26,7 +30,10 @@ impl<const LOW_BITS: usize> LowTagLayout<LOW_BITS> {
     /// Validate only the requested low-bit layout.
     pub const fn validate_layout() -> TagResult<()> {
         if LOW_BITS > Self::MAX_LOW_BITS {
-            Err(TagError::LowBitsTooLarge { bits: LOW_BITS, max: Self::MAX_LOW_BITS })
+            Err(TagError::LowBitsTooLarge {
+                bits: LOW_BITS,
+                max: Self::MAX_LOW_BITS,
+            })
         } else {
             Ok(())
         }
@@ -35,10 +42,16 @@ impl<const LOW_BITS: usize> LowTagLayout<LOW_BITS> {
     /// Validate that a tag fits.
     pub const fn validate_tag(tag: usize) -> TagResult<()> {
         if LOW_BITS > Self::MAX_LOW_BITS {
-            return Err(TagError::LowBitsTooLarge { bits: LOW_BITS, max: Self::MAX_LOW_BITS });
+            return Err(TagError::LowBitsTooLarge {
+                bits: LOW_BITS,
+                max: Self::MAX_LOW_BITS,
+            });
         }
         if tag & !Self::LOW_MASK != 0 {
-            return Err(TagError::TagTooLarge { tag, mask: Self::LOW_MASK });
+            return Err(TagError::TagTooLarge {
+                tag,
+                mask: Self::LOW_MASK,
+            });
         }
         Ok(())
     }
@@ -46,10 +59,16 @@ impl<const LOW_BITS: usize> LowTagLayout<LOW_BITS> {
     /// Validate that an address is aligned enough for this tag layout.
     pub const fn validate_addr(addr: usize) -> TagResult<()> {
         if LOW_BITS > Self::MAX_LOW_BITS {
-            return Err(TagError::LowBitsTooLarge { bits: LOW_BITS, max: Self::MAX_LOW_BITS });
+            return Err(TagError::LowBitsTooLarge {
+                bits: LOW_BITS,
+                max: Self::MAX_LOW_BITS,
+            });
         }
         if addr & Self::LOW_MASK != 0 {
-            return Err(TagError::Misaligned { addr, align: Self::ALIGN });
+            return Err(TagError::Misaligned {
+                addr,
+                align: Self::ALIGN,
+            });
         }
         Ok(())
     }

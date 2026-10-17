@@ -1,5 +1,5 @@
-use petr_dispatch::{DispatchResult, OpFrame, OperationTable};
 use petr_core::{Key, ProphecyBits, SelectorWord, TagResult};
+use petr_dispatch::{DispatchResult, OpFrame, OperationTable};
 
 use crate::{KeyedArena, KeyedArenaError, KeyedArenaHandle, KeyedArenaResult};
 
@@ -27,36 +27,60 @@ pub struct KeyedDispatchVec<T, const LOW_BITS: usize> {
 }
 
 impl<T, const LOW_BITS: usize> Default for KeyedDispatchVec<T, LOW_BITS> {
-    fn default() -> Self { Self::new_randomized() }
+    fn default() -> Self {
+        Self::new_randomized()
+    }
 }
 
 impl<T, const LOW_BITS: usize> KeyedDispatchVec<T, LOW_BITS> {
     /// Create with an OS-random key when available.
-    pub fn new_randomized() -> Self { Self { arena: KeyedArena::new_randomized() } }
+    pub fn new_randomized() -> Self {
+        Self {
+            arena: KeyedArena::new_randomized(),
+        }
+    }
 
     /// Create with a deterministic key, mostly useful for tests.
-    pub fn with_key(key: Key<LOW_BITS>) -> Self { Self { arena: KeyedArena::with_key(key) } }
+    pub fn with_key(key: Key<LOW_BITS>) -> Self {
+        Self {
+            arena: KeyedArena::with_key(key),
+        }
+    }
 
     /// Return the collection key value.
-    pub const fn key(&self) -> Key<LOW_BITS> { self.arena.key() }
+    pub const fn key(&self) -> Key<LOW_BITS> {
+        self.arena.key()
+    }
 
     /// Number of live entries.
-    pub const fn len(&self) -> usize { self.arena.len() }
+    pub const fn len(&self) -> usize {
+        self.arena.len()
+    }
 
     /// Return true when there are no live entries.
-    pub const fn is_empty(&self) -> bool { self.arena.is_empty() }
+    pub const fn is_empty(&self) -> bool {
+        self.arena.is_empty()
+    }
 
     /// Number of allocated slots, including vacant reusable slots.
-    pub fn slot_capacity(&self) -> usize { self.arena.slot_capacity() }
+    pub fn slot_capacity(&self) -> usize {
+        self.arena.slot_capacity()
+    }
 
     /// Number of vacant reusable slots.
-    pub fn free_len(&self) -> usize { self.arena.free_len() }
+    pub fn free_len(&self) -> usize {
+        self.arena.free_len()
+    }
 
     /// Borrow the underlying arena.
-    pub const fn arena(&self) -> &KeyedArena<T, LOW_BITS> { &self.arena }
+    pub const fn arena(&self) -> &KeyedArena<T, LOW_BITS> {
+        &self.arena
+    }
 
     /// Mutably borrow the underlying arena.
-    pub fn arena_mut(&mut self) -> &mut KeyedArena<T, LOW_BITS> { &mut self.arena }
+    pub fn arena_mut(&mut self) -> &mut KeyedArena<T, LOW_BITS> {
+        &mut self.arena
+    }
 
     /// Push a value and return an opaque generation/capability handle.
     pub fn push(
@@ -70,12 +94,17 @@ impl<T, const LOW_BITS: usize> KeyedDispatchVec<T, LOW_BITS> {
     }
 
     /// Validate a handle and return the live slot index.
-    pub fn validate_handle(&self, handle: KeyedDispatchHandle<T, LOW_BITS>) -> KeyedDispatchResult<usize> {
+    pub fn validate_handle(
+        &self,
+        handle: KeyedDispatchHandle<T, LOW_BITS>,
+    ) -> KeyedDispatchResult<usize> {
         self.arena.validate_handle(handle)
     }
 
     /// Return true if the handle currently resolves to a live entry.
-    pub fn contains(&self, handle: KeyedDispatchHandle<T, LOW_BITS>) -> bool { self.arena.contains(handle) }
+    pub fn contains(&self, handle: KeyedDispatchHandle<T, LOW_BITS>) -> bool {
+        self.arena.contains(handle)
+    }
 
     /// Return a shared reference through a validated handle.
     pub fn get(&self, handle: KeyedDispatchHandle<T, LOW_BITS>) -> KeyedDispatchResult<&T> {
@@ -83,7 +112,10 @@ impl<T, const LOW_BITS: usize> KeyedDispatchVec<T, LOW_BITS> {
     }
 
     /// Return a mutable reference through a validated handle.
-    pub fn get_mut(&mut self, handle: KeyedDispatchHandle<T, LOW_BITS>) -> KeyedDispatchResult<&mut T> {
+    pub fn get_mut(
+        &mut self,
+        handle: KeyedDispatchHandle<T, LOW_BITS>,
+    ) -> KeyedDispatchResult<&mut T> {
         self.arena.get_mut(handle)
     }
 
@@ -93,7 +125,9 @@ impl<T, const LOW_BITS: usize> KeyedDispatchVec<T, LOW_BITS> {
     }
 
     /// Return all current live handles in slot order.
-    pub fn live_handles(&self) -> Vec<KeyedDispatchHandle<T, LOW_BITS>> { self.arena.live_handles() }
+    pub fn live_handles(&self) -> Vec<KeyedDispatchHandle<T, LOW_BITS>> {
+        self.arena.live_handles()
+    }
 
     /// Set a low tag and refresh the check word, returning the updated handle.
     pub fn set_tag(
@@ -138,10 +172,16 @@ impl<T, const LOW_BITS: usize> KeyedDispatchVec<T, LOW_BITS> {
     }
 
     /// Dispatch all live entries in slot order.
-    pub fn dispatch_all(&self, table: &OperationTable, seed_frame: OpFrame) -> KeyedDispatchResult<Vec<DispatchResult<OpFrame>>> {
+    pub fn dispatch_all(
+        &self,
+        table: &OperationTable,
+        seed_frame: OpFrame,
+    ) -> KeyedDispatchResult<Vec<DispatchResult<OpFrame>>> {
         self.arena.dispatch_all(table, seed_frame)
     }
 
     /// Remove all live entries.
-    pub fn clear(&mut self) { self.arena.clear(); }
+    pub fn clear(&mut self) {
+        self.arena.clear();
+    }
 }

@@ -10,12 +10,19 @@ pub struct TaggedVec<T, const LOW_BITS: usize> {
 }
 
 impl<T, const LOW_BITS: usize> Default for TaggedVec<T, LOW_BITS> {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<T, const LOW_BITS: usize> TaggedVec<T, LOW_BITS> {
     /// Create an empty collection.
-    pub fn new() -> Self { Self { items: Vec::new(), handles: Vec::new() } }
+    pub fn new() -> Self {
+        Self {
+            items: Vec::new(),
+            handles: Vec::new(),
+        }
+    }
 
     /// Push an item with a tag and return its index.
     pub fn push(&mut self, value: T, tag: usize) -> TagResult<usize> {
@@ -34,10 +41,14 @@ impl<T, const LOW_BITS: usize> TaggedVec<T, LOW_BITS> {
     }
 
     /// Return a shared reference by index.
-    pub fn get(&self, index: usize) -> Option<&T> { self.items.get(index).map(Box::as_ref) }
+    pub fn get(&self, index: usize) -> Option<&T> {
+        self.items.get(index).map(Box::as_ref)
+    }
 
     /// Return a mutable reference by index.
-    pub fn get_mut(&mut self, index: usize) -> Option<&mut T> { self.items.get_mut(index).map(Box::as_mut) }
+    pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
+        self.items.get_mut(index).map(Box::as_mut)
+    }
 
     /// Change the tag associated with an element.
     pub fn set_tag(&mut self, index: usize, tag: usize) -> TagResult<()> {
@@ -48,8 +59,12 @@ impl<T, const LOW_BITS: usize> TaggedVec<T, LOW_BITS> {
     }
 
     /// Number of elements.
-    pub fn len(&self) -> usize { self.items.len() }
+    pub fn len(&self) -> usize {
+        self.items.len()
+    }
 
     /// Return true if empty.
-    pub fn is_empty(&self) -> bool { self.items.is_empty() }
+    pub fn is_empty(&self) -> bool {
+        self.items.is_empty()
+    }
 }

@@ -51,16 +51,48 @@ impl SparseMatrix {
 
     /// Build a demo matrix.
     pub fn demo() -> Self {
-        let active = ProphecyBits { maybe_zero: false, maybe_empty: false, hot: true, skip_hint: false, port_hint: PortHint::Vector };
-        let zero = ProphecyBits { maybe_zero: true, maybe_empty: false, hot: false, skip_hint: true, port_hint: PortHint::Vector };
+        let active = ProphecyBits {
+            maybe_zero: false,
+            maybe_empty: false,
+            hot: true,
+            skip_hint: false,
+            port_hint: PortHint::Vector,
+        };
+        let zero = ProphecyBits {
+            maybe_zero: true,
+            maybe_empty: false,
+            hot: false,
+            skip_hint: true,
+            port_hint: PortHint::Vector,
+        };
         Self {
             rows: 3,
             cols: 3,
             cells: vec![
-                SparseCell { row: 0, col: 0, value: 2.0, prophecy: active },
-                SparseCell { row: 0, col: 1, value: 0.0, prophecy: zero },
-                SparseCell { row: 1, col: 1, value: 4.0, prophecy: active },
-                SparseCell { row: 2, col: 2, value: 8.0, prophecy: active },
+                SparseCell {
+                    row: 0,
+                    col: 0,
+                    value: 2.0,
+                    prophecy: active,
+                },
+                SparseCell {
+                    row: 0,
+                    col: 1,
+                    value: 0.0,
+                    prophecy: zero,
+                },
+                SparseCell {
+                    row: 1,
+                    col: 1,
+                    value: 4.0,
+                    prophecy: active,
+                },
+                SparseCell {
+                    row: 2,
+                    col: 2,
+                    value: 8.0,
+                    prophecy: active,
+                },
             ],
         }
     }

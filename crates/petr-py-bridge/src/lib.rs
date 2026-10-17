@@ -2,13 +2,17 @@
 
 //! Optional PyO3 bridge skeleton for using the dispatch engine from Python.
 
-use petr_dispatch::{default_table, OpFrame};
+use petr_dispatch::{OpFrame, default_table};
 
 /// Pure Rust helper that mirrors the Python-facing function.
 pub fn run_prefix_suffix(text: &str) -> String {
     let table = default_table();
-    let frame = table.execute(0x01, OpFrame::text(text)).and_then(|f| table.execute(0x02, f));
-    frame.map(|f| f.text).unwrap_or_else(|e| format!("error: {e}"))
+    let frame = table
+        .execute(0x01, OpFrame::text(text))
+        .and_then(|f| table.execute(0x02, f));
+    frame
+        .map(|f| f.text)
+        .unwrap_or_else(|e| format!("error: {e}"))
 }
 
 #[cfg(feature = "python")]

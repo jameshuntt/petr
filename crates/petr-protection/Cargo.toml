@@ -1,0 +1,16 @@
+[package]
+name = "petr-protection"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Portable protection requirements and capability negotiation for PETR execution and memory bridges."
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "../../README.md"
+
+[dependencies]
+thiserror = { workspace = true }
+
+[package.metadata.docs.rs]
+all-features = true

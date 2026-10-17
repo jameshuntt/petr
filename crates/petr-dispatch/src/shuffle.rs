@@ -30,14 +30,21 @@ impl SelectorPermutation {
         for (logical, physical) in arr.iter().enumerate() {
             inv[*physical as usize] = logical as u8;
         }
-        Self { logical_to_physical: arr, physical_to_logical: inv }
+        Self {
+            logical_to_physical: arr,
+            physical_to_logical: inv,
+        }
     }
 
     /// Encode a logical selector into the shuffled physical selector.
-    pub fn encode(&self, logical: u8) -> u8 { self.logical_to_physical[logical as usize] }
+    pub fn encode(&self, logical: u8) -> u8 {
+        self.logical_to_physical[logical as usize]
+    }
 
     /// Decode a physical selector back to the logical selector.
-    pub fn decode(&self, physical: u8) -> u8 { self.physical_to_logical[physical as usize] }
+    pub fn decode(&self, physical: u8) -> u8 {
+        self.physical_to_logical[physical as usize]
+    }
 }
 
 /// Operation table whose externally visible bytecode selectors are shuffled.
@@ -50,11 +57,16 @@ pub struct ShuffledOperationTable {
 impl ShuffledOperationTable {
     /// Create a shuffled table from an existing logical table.
     pub fn new(logical: OperationTable, seed: u64) -> Self {
-        Self { table: logical, permutation: SelectorPermutation::from_seed(seed) }
+        Self {
+            table: logical,
+            permutation: SelectorPermutation::from_seed(seed),
+        }
     }
 
     /// Encode logical selector for storage/transmission.
-    pub fn encode_selector(&self, logical: u8) -> u8 { self.permutation.encode(logical) }
+    pub fn encode_selector(&self, logical: u8) -> u8 {
+        self.permutation.encode(logical)
+    }
 
     /// Execute using a shuffled physical selector.
     pub fn execute_physical(&self, physical: u8, frame: OpFrame) -> DispatchResult<OpFrame> {

@@ -6,7 +6,11 @@ fn main() {
     let mut vec = KeyedTaggedVec::<String, 3>::with_key(key);
     let idx = vec.push("secret-object".to_string(), 0b101).unwrap();
     let handle = vec.handle(idx).unwrap();
-    println!("stored masked word = {:#x}, low_tag={:#b}", handle.stored_word(), handle.tag());
+    println!(
+        "stored masked word = {:#x}, low_tag={:#b}",
+        handle.stored_word(),
+        handle.tag()
+    );
     let found = vec.get_by_handle(handle).unwrap().unwrap();
     println!("revealed value = {found}");
 }

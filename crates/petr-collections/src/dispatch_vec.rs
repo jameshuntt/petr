@@ -1,7 +1,7 @@
 use core::ptr::NonNull;
 
-use petr_dispatch::{DispatchResult, OpFrame, OperationTable};
 use petr_core::{ProphecyBits, SelectorWord, TagResult, TaggedNonNull};
+use petr_dispatch::{DispatchResult, OpFrame, OperationTable};
 
 /// One Vec item plus selector/prophecy metadata.
 #[derive(Debug)]
@@ -16,7 +16,9 @@ pub struct DispatchHandle<T, const LOW_BITS: usize> {
 
 impl<T, const LOW_BITS: usize> Copy for DispatchHandle<T, LOW_BITS> {}
 impl<T, const LOW_BITS: usize> Clone for DispatchHandle<T, LOW_BITS> {
-    fn clone(&self) -> Self { *self }
+    fn clone(&self) -> Self {
+        *self
+    }
 }
 
 /// Vec-like structure that stores data and a selector for what operation to run.
@@ -27,20 +29,37 @@ pub struct DispatchVec<T, const LOW_BITS: usize> {
 }
 
 impl<T, const LOW_BITS: usize> Default for DispatchVec<T, LOW_BITS> {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<T, const LOW_BITS: usize> DispatchVec<T, LOW_BITS> {
     /// Create an empty dispatch Vec.
-    pub fn new() -> Self { Self { items: Vec::new(), handles: Vec::new() } }
+    pub fn new() -> Self {
+        Self {
+            items: Vec::new(),
+            handles: Vec::new(),
+        }
+    }
 
     /// Push a value with low tag, selector, and prophecy.
-    pub fn push(&mut self, value: T, low_tag: usize, selector: SelectorWord, prophecy: ProphecyBits) -> TagResult<usize> {
+    pub fn push(
+        &mut self,
+        value: T,
+        low_tag: usize,
+        selector: SelectorWord,
+        prophecy: ProphecyBits,
+    ) -> TagResult<usize> {
         let mut boxed = Box::new(value);
         let ptr = TaggedNonNull::new(NonNull::from(boxed.as_mut()), low_tag)?;
         let idx = self.items.len();
         self.items.push(boxed);
-        self.handles.push(DispatchHandle { ptr, selector, prophecy });
+        self.handles.push(DispatchHandle {
+            ptr,
+            selector,
+            prophecy,
+        });
         Ok(idx)
     }
 
@@ -50,7 +69,11 @@ impl<T, const LOW_BITS: usize> DispatchVec<T, LOW_BITS> {
     }
 
     /// Run each handle's selector against an operation table.
-    pub fn dispatch_all(&self, table: &OperationTable, seed_frame: OpFrame) -> DispatchResult<Vec<OpFrame>> {
+    pub fn dispatch_all(
+        &self,
+        table: &OperationTable,
+        seed_frame: OpFrame,
+    ) -> DispatchResult<Vec<OpFrame>> {
         let mut out = Vec::with_capacity(self.handles.len());
         for h in &self.handles {
             if h.prophecy.skip_hint {

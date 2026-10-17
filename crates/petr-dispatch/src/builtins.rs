@@ -1,7 +1,9 @@
 use crate::{DispatchError, DispatchResult, OpArg, OpFrame, OperationTable};
 
 /// No-op operation.
-pub fn op_nop(frame: OpFrame, _arg: &OpArg) -> DispatchResult<OpFrame> { Ok(frame) }
+pub fn op_nop(frame: OpFrame, _arg: &OpArg) -> DispatchResult<OpFrame> {
+    Ok(frame)
+}
 
 /// Prefix text.
 pub fn op_add_prefix(mut frame: OpFrame, arg: &OpArg) -> DispatchResult<OpFrame> {
@@ -32,7 +34,8 @@ pub fn op_octal_multiply(mut frame: OpFrame, arg: &OpArg) -> DispatchResult<OpFr
     if !frame.text.chars().all(|c| c.is_digit(8)) {
         return Err(DispatchError::InvalidInput(frame.text));
     }
-    let value = u32::from_str_radix(&frame.text, 8).map_err(|_| DispatchError::InvalidInput(frame.text.clone()))?;
+    let value = u32::from_str_radix(&frame.text, 8)
+        .map_err(|_| DispatchError::InvalidInput(frame.text.clone()))?;
     frame.text = format!("{:o}", value.saturating_mul(arg.n as u32));
     Ok(frame)
 }
@@ -42,7 +45,8 @@ pub fn op_octal_add(mut frame: OpFrame, arg: &OpArg) -> DispatchResult<OpFrame> 
     if !frame.text.chars().all(|c| c.is_digit(8)) {
         return Err(DispatchError::InvalidInput(frame.text));
     }
-    let value = u32::from_str_radix(&frame.text, 8).map_err(|_| DispatchError::InvalidInput(frame.text.clone()))?;
+    let value = u32::from_str_radix(&frame.text, 8)
+        .map_err(|_| DispatchError::InvalidInput(frame.text.clone()))?;
     frame.text = format!("{:o}", value.saturating_add(arg.n as u32));
     Ok(frame)
 }
@@ -52,7 +56,8 @@ pub fn op_octet_encode(mut frame: OpFrame, _arg: &OpArg) -> DispatchResult<OpFra
     if !frame.text.chars().all(|c| c.is_ascii_hexdigit()) {
         return Err(DispatchError::InvalidInput(frame.text));
     }
-    let value = u32::from_str_radix(&frame.text, 16).map_err(|_| DispatchError::InvalidInput(frame.text.clone()))?;
+    let value = u32::from_str_radix(&frame.text, 16)
+        .map_err(|_| DispatchError::InvalidInput(frame.text.clone()))?;
     frame.text = format!("{:X}", value);
     Ok(frame)
 }
@@ -62,7 +67,8 @@ pub fn op_octet_add(mut frame: OpFrame, arg: &OpArg) -> DispatchResult<OpFrame> 
     if !frame.text.chars().all(|c| c.is_ascii_hexdigit()) {
         return Err(DispatchError::InvalidInput(frame.text));
     }
-    let value = u32::from_str_radix(&frame.text, 16).map_err(|_| DispatchError::InvalidInput(frame.text.clone()))?;
+    let value = u32::from_str_radix(&frame.text, 16)
+        .map_err(|_| DispatchError::InvalidInput(frame.text.clone()))?;
     frame.text = format!("{:X}", value.saturating_add(arg.n as u32));
     Ok(frame)
 }

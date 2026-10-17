@@ -11,10 +11,10 @@ readme = "../../README.md"
 publish = false
 
 [dependencies]
-petr-core = { path = "../petr-core", version = "0.1.0" }
-petr-dispatch = { path = "../petr-dispatch", version = "0.1.0" }
-petr-collections = { path = "../petr-collections", version = "0.1.0" }
-petr-resource = { path = "../petr-resource", version = "0.1.0" }
-petr-spatial = { path = "../petr-spatial", version = "0.1.0" }
-petr-math = { path = "../petr-math", version = "0.1.0" }
-petr-py-bridge = { path = "../petr-py-bridge", version = "0.1.0" }
+petr-core = { path = "../petr-core", version = "0.2.0" }
+petr-dispatch = { path = "../petr-dispatch", version = "0.2.0" }
+petr-collections = { path = "../petr-collections", version = "0.2.0" }
+petr-resource = { path = "../petr-resource", version = "0.2.0" }
+petr-spatial = { path = "../petr-spatial", version = "0.2.0" }
+petr-math = { path = "../petr-math", version = "0.2.0" }
+petr-py-bridge = { path = "../petr-py-bridge", version = "0.2.0" }

@@ -1,0 +1,21 @@
+[package]
+name = "petr-affinity"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "CPU-set selection and optional operating-system thread affinity for PETR execution plans."
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "../../README.md"
+
+[features]
+default = []
+core-affinity = ["dep:core_affinity"]
+
+[dependencies]
+thiserror = { workspace = true }
+core_affinity = { version = "0.8", optional = true }
+
+[package.metadata.docs.rs]
+all-features = true

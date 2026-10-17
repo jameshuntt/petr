@@ -40,3 +40,15 @@ If those fail, treat the failure as a hard correctness issue until proven otherw
 Pages are individually boxed before entries are installed. Growth of the outer `Vec<Box<Page<_>>>` moves box handles but does not move page allocations. Slot removal and reuse refreshes the generation. Tag, selector, or prophecy transitions return a new handle and invalidate the previous metadata envelope.
 
 The division operator requires `DivisionRecord` to be 16-byte aligned because four low bits are reserved. Insertion fails through tag validation if a generic paged-arena value does not satisfy its requested low-bit alignment.
+
+## Temporal pointer authority
+
+`petr-temporal` does not make a tagged integer word into pointer authority.
+Temporal handles preserve the underlying provenance-carrying pointer and layer
+phase/generation eligibility on top of it. A phase match is therefore an
+additional capability check, not permission to synthesize or dereference an
+address from integer metadata.
+
+Generation is part of temporal validity. Returning to the same phase later does
+not revive an authority from an earlier generation; the hardening tests cover
+that non-revival rule explicitly.

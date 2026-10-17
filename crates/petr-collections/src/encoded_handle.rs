@@ -61,9 +61,10 @@ impl EncodedArenaHandle {
 }
 
 impl<T, const LOW_BITS: usize> From<KeyedArenaHandle<T, LOW_BITS>> for EncodedArenaHandle {
-    fn from(handle: KeyedArenaHandle<T, LOW_BITS>) -> Self { Self::from_handle(handle) }
+    fn from(handle: KeyedArenaHandle<T, LOW_BITS>) -> Self {
+        Self::from_handle(handle)
+    }
 }
-
 
 impl EncodedArenaHandle {
     /// Encode a live paged-arena handle into primitive metadata.

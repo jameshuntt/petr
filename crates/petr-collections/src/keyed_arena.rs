@@ -1,7 +1,7 @@
 use core::{marker::PhantomData, num::NonZeroUsize, ptr::NonNull};
 
-use petr_dispatch::{DispatchResult, OpFrame, OperationTable};
 use petr_core::{Key, LowTagLayout, ProphecyBits, SelectorWord, TagResult};
+use petr_dispatch::{DispatchResult, OpFrame, OperationTable};
 
 /// Opaque handle for a live [`KeyedArena`] entry.
 ///
@@ -22,41 +22,63 @@ pub struct KeyedArenaHandle<T, const LOW_BITS: usize> {
 impl<T, const LOW_BITS: usize> Copy for KeyedArenaHandle<T, LOW_BITS> {}
 
 impl<T, const LOW_BITS: usize> Clone for KeyedArenaHandle<T, LOW_BITS> {
-    fn clone(&self) -> Self { *self }
+    fn clone(&self) -> Self {
+        *self
+    }
 }
 
 impl<T, const LOW_BITS: usize> KeyedArenaHandle<T, LOW_BITS> {
     /// Slot index carried by this handle.
-    pub const fn index(self) -> u32 { self.index }
+    pub const fn index(self) -> u32 {
+        self.index
+    }
 
     /// Generation carried by this handle.
-    pub const fn generation(self) -> u32 { self.generation }
+    pub const fn generation(self) -> u32 {
+        self.generation
+    }
 
     /// Masked nonzero verification word. This is not a raw pointer authority.
-    pub const fn check_word(self) -> NonZeroUsize { self.check }
+    pub const fn check_word(self) -> NonZeroUsize {
+        self.check
+    }
 
     /// Trait/implementation/function selector attached to this handle.
-    pub const fn selector(self) -> SelectorWord { self.selector }
+    pub const fn selector(self) -> SelectorWord {
+        self.selector
+    }
 
     /// Prophecy/hint bits attached to this handle.
-    pub const fn prophecy(self) -> ProphecyBits { self.prophecy }
+    pub const fn prophecy(self) -> ProphecyBits {
+        self.prophecy
+    }
 
     /// Low state tag visible in the check word.
-    pub const fn tag(self) -> usize { self.check.get() & LowTagLayout::<LOW_BITS>::LOW_MASK }
+    pub const fn tag(self) -> usize {
+        self.check.get() & LowTagLayout::<LOW_BITS>::LOW_MASK
+    }
 
     /// Build a forged/test handle by changing only the check word.
     ///
     /// This is intentionally safe because validation must reject forged handles.
-    pub const fn with_check_word(self, check: NonZeroUsize) -> Self { Self { check, ..self } }
+    pub const fn with_check_word(self, check: NonZeroUsize) -> Self {
+        Self { check, ..self }
+    }
 
     /// Build a forged/test handle by changing only the generation.
-    pub const fn with_generation(self, generation: u32) -> Self { Self { generation, ..self } }
+    pub const fn with_generation(self, generation: u32) -> Self {
+        Self { generation, ..self }
+    }
 
     /// Build a forged/test handle by changing only the selector.
-    pub const fn with_selector(self, selector: SelectorWord) -> Self { Self { selector, ..self } }
+    pub const fn with_selector(self, selector: SelectorWord) -> Self {
+        Self { selector, ..self }
+    }
 
     /// Build a forged/test handle by changing only the prophecy bits.
-    pub const fn with_prophecy(self, prophecy: ProphecyBits) -> Self { Self { prophecy, ..self } }
+    pub const fn with_prophecy(self, prophecy: ProphecyBits) -> Self {
+        Self { prophecy, ..self }
+    }
 
     /// Rebuild a handle from opaque validation parts.
     ///
@@ -71,7 +93,14 @@ impl<T, const LOW_BITS: usize> KeyedArenaHandle<T, LOW_BITS> {
         selector: SelectorWord,
         prophecy: ProphecyBits,
     ) -> Self {
-        Self { index, generation, check, selector, prophecy, _marker: PhantomData }
+        Self {
+            index,
+            generation,
+            check,
+            selector,
+            prophecy,
+            _marker: PhantomData,
+        }
     }
 }
 
@@ -110,8 +139,14 @@ pub enum KeyedArenaError {
     Vacant { index: u32 },
 
     /// The handle generation does not match the live slot generation.
-    #[error("stale arena handle at index {index}: handle generation {handle_generation}, live generation {live_generation}")]
-    StaleGeneration { index: u32, handle_generation: u32, live_generation: u32 },
+    #[error(
+        "stale arena handle at index {index}: handle generation {handle_generation}, live generation {live_generation}"
+    )]
+    StaleGeneration {
+        index: u32,
+        handle_generation: u32,
+        live_generation: u32,
+    },
 
     /// The check word does not match the live masked pointer/tag word.
     #[error("arena capability/check word mismatch at index {index}")]
@@ -169,35 +204,57 @@ pub struct KeyedArena<T, const LOW_BITS: usize> {
 }
 
 impl<T, const LOW_BITS: usize> Default for KeyedArena<T, LOW_BITS> {
-    fn default() -> Self { Self::new_randomized() }
+    fn default() -> Self {
+        Self::new_randomized()
+    }
 }
 
 impl<T, const LOW_BITS: usize> KeyedArena<T, LOW_BITS> {
     /// Create an arena with an OS-random key when available.
-    pub fn new_randomized() -> Self { Self::with_key(Key::random()) }
+    pub fn new_randomized() -> Self {
+        Self::with_key(Key::random())
+    }
 
     /// Create an arena with a deterministic key, mostly useful for tests.
     pub fn with_key(key: Key<LOW_BITS>) -> Self {
-        Self { key, entries: Vec::new(), free: Vec::new(), live: 0, next_generation: 1 }
+        Self {
+            key,
+            entries: Vec::new(),
+            free: Vec::new(),
+            live: 0,
+            next_generation: 1,
+        }
     }
 
     /// Return the arena key value.
-    pub const fn key(&self) -> Key<LOW_BITS> { self.key }
+    pub const fn key(&self) -> Key<LOW_BITS> {
+        self.key
+    }
 
     /// Number of live entries.
-    pub const fn len(&self) -> usize { self.live }
+    pub const fn len(&self) -> usize {
+        self.live
+    }
 
     /// Return true when the arena has no live entries.
-    pub const fn is_empty(&self) -> bool { self.live == 0 }
+    pub const fn is_empty(&self) -> bool {
+        self.live == 0
+    }
 
     /// Number of allocated slots, including vacant reusable slots.
-    pub fn slot_capacity(&self) -> usize { self.entries.len() }
+    pub fn slot_capacity(&self) -> usize {
+        self.entries.len()
+    }
 
     /// Number of vacant reusable slots.
-    pub fn free_len(&self) -> usize { self.free.len() }
+    pub fn free_len(&self) -> usize {
+        self.free.len()
+    }
 
     /// Reserve backing slot capacity.
-    pub fn reserve_slots(&mut self, additional: usize) { self.entries.reserve(additional); }
+    pub fn reserve_slots(&mut self, additional: usize) {
+        self.entries.reserve(additional);
+    }
 
     /// Insert a value and return an opaque arena handle.
     pub fn insert(
@@ -214,7 +271,14 @@ impl<T, const LOW_BITS: usize> KeyedArena<T, LOW_BITS> {
         let generation = self.next_generation;
         self.next_generation = self.next_generation.wrapping_add(1).max(1);
 
-        let entry = ArenaEntry { value, ptr, generation, check, selector, prophecy };
+        let entry = ArenaEntry {
+            value,
+            ptr,
+            generation,
+            check,
+            selector,
+            prophecy,
+        };
         let index = if let Some(index) = self.free.pop() {
             self.entries[index] = Some(entry);
             index
@@ -223,17 +287,27 @@ impl<T, const LOW_BITS: usize> KeyedArena<T, LOW_BITS> {
             self.entries.len() - 1
         };
         self.live += 1;
-        Ok(self.entries[index].as_ref().expect("inserted arena entry exists").handle(index))
+        Ok(self.entries[index]
+            .as_ref()
+            .expect("inserted arena entry exists")
+            .handle(index))
     }
 
     /// Validate a handle and return the live slot index.
-    pub fn validate_handle(&self, handle: KeyedArenaHandle<T, LOW_BITS>) -> KeyedArenaResult<usize> {
+    pub fn validate_handle(
+        &self,
+        handle: KeyedArenaHandle<T, LOW_BITS>,
+    ) -> KeyedArenaResult<usize> {
         let index = handle.index as usize;
         let Some(slot) = self.entries.get(index) else {
-            return Err(KeyedArenaError::BadIndex { index: handle.index });
+            return Err(KeyedArenaError::BadIndex {
+                index: handle.index,
+            });
         };
         let Some(entry) = slot.as_ref() else {
-            return Err(KeyedArenaError::Vacant { index: handle.index });
+            return Err(KeyedArenaError::Vacant {
+                index: handle.index,
+            });
         };
         if entry.generation != handle.generation {
             return Err(KeyedArenaError::StaleGeneration {
@@ -243,17 +317,25 @@ impl<T, const LOW_BITS: usize> KeyedArena<T, LOW_BITS> {
             });
         }
         if entry.check != handle.check {
-            return Err(KeyedArenaError::CheckMismatch { index: handle.index });
+            return Err(KeyedArenaError::CheckMismatch {
+                index: handle.index,
+            });
         }
         if entry.selector != handle.selector {
-            return Err(KeyedArenaError::SelectorMismatch { index: handle.index });
+            return Err(KeyedArenaError::SelectorMismatch {
+                index: handle.index,
+            });
         }
         if entry.prophecy != handle.prophecy {
-            return Err(KeyedArenaError::ProphecyMismatch { index: handle.index });
+            return Err(KeyedArenaError::ProphecyMismatch {
+                index: handle.index,
+            });
         }
         let revealed = self.key.reveal_addr(handle.check)?;
         if revealed != entry.ptr.as_ptr() as usize {
-            return Err(KeyedArenaError::RevealMismatch { index: handle.index });
+            return Err(KeyedArenaError::RevealMismatch {
+                index: handle.index,
+            });
         }
         Ok(index)
     }
@@ -266,18 +348,29 @@ impl<T, const LOW_BITS: usize> KeyedArena<T, LOW_BITS> {
     /// Return a shared reference through a validated handle.
     pub fn get(&self, handle: KeyedArenaHandle<T, LOW_BITS>) -> KeyedArenaResult<&T> {
         let index = self.validate_handle(handle)?;
-        Ok(self.entries[index].as_ref().expect("validated live arena entry").value.as_ref())
+        Ok(self.entries[index]
+            .as_ref()
+            .expect("validated live arena entry")
+            .value
+            .as_ref())
     }
 
     /// Return a mutable reference through a validated handle.
     pub fn get_mut(&mut self, handle: KeyedArenaHandle<T, LOW_BITS>) -> KeyedArenaResult<&mut T> {
         let index = self.validate_handle(handle)?;
-        Ok(self.entries[index].as_mut().expect("validated live arena entry").value.as_mut())
+        Ok(self.entries[index]
+            .as_mut()
+            .expect("validated live arena entry")
+            .value
+            .as_mut())
     }
 
     /// Return the current handle for an index if it is live.
     pub fn handle_at(&self, index: usize) -> Option<KeyedArenaHandle<T, LOW_BITS>> {
-        self.entries.get(index)?.as_ref().map(|entry| entry.handle(index))
+        self.entries
+            .get(index)?
+            .as_ref()
+            .map(|entry| entry.handle(index))
     }
 
     /// Return all current live handles in slot order.
@@ -290,15 +383,27 @@ impl<T, const LOW_BITS: usize> KeyedArena<T, LOW_BITS> {
     }
 
     /// Return the selector for a validated handle.
-    pub fn selector(&self, handle: KeyedArenaHandle<T, LOW_BITS>) -> KeyedArenaResult<SelectorWord> {
+    pub fn selector(
+        &self,
+        handle: KeyedArenaHandle<T, LOW_BITS>,
+    ) -> KeyedArenaResult<SelectorWord> {
         let index = self.validate_handle(handle)?;
-        Ok(self.entries[index].as_ref().expect("validated live arena entry").selector)
+        Ok(self.entries[index]
+            .as_ref()
+            .expect("validated live arena entry")
+            .selector)
     }
 
     /// Return the prophecy bits for a validated handle.
-    pub fn prophecy(&self, handle: KeyedArenaHandle<T, LOW_BITS>) -> KeyedArenaResult<ProphecyBits> {
+    pub fn prophecy(
+        &self,
+        handle: KeyedArenaHandle<T, LOW_BITS>,
+    ) -> KeyedArenaResult<ProphecyBits> {
         let index = self.validate_handle(handle)?;
-        Ok(self.entries[index].as_ref().expect("validated live arena entry").prophecy)
+        Ok(self.entries[index]
+            .as_ref()
+            .expect("validated live arena entry")
+            .prophecy)
     }
 
     /// Set the low tag and refresh the check word, returning the updated handle.
@@ -312,7 +417,9 @@ impl<T, const LOW_BITS: usize> KeyedArena<T, LOW_BITS> {
     ) -> KeyedArenaResult<KeyedArenaHandle<T, LOW_BITS>> {
         LowTagLayout::<LOW_BITS>::validate_tag(tag)?;
         let index = self.validate_handle(handle)?;
-        let entry = self.entries[index].as_mut().expect("validated live arena entry");
+        let entry = self.entries[index]
+            .as_mut()
+            .expect("validated live arena entry");
         entry.check = self.key.mask_addr(entry.ptr.as_ptr() as usize, tag)?;
         Ok(entry.handle(index))
     }
@@ -328,7 +435,9 @@ impl<T, const LOW_BITS: usize> KeyedArena<T, LOW_BITS> {
         selector: SelectorWord,
     ) -> KeyedArenaResult<KeyedArenaHandle<T, LOW_BITS>> {
         let index = self.validate_handle(handle)?;
-        let entry = self.entries[index].as_mut().expect("validated live arena entry");
+        let entry = self.entries[index]
+            .as_mut()
+            .expect("validated live arena entry");
         entry.selector = selector;
         Ok(entry.handle(index))
     }
@@ -343,7 +452,9 @@ impl<T, const LOW_BITS: usize> KeyedArena<T, LOW_BITS> {
         prophecy: ProphecyBits,
     ) -> KeyedArenaResult<KeyedArenaHandle<T, LOW_BITS>> {
         let index = self.validate_handle(handle)?;
-        let entry = self.entries[index].as_mut().expect("validated live arena entry");
+        let entry = self.entries[index]
+            .as_mut()
+            .expect("validated live arena entry");
         entry.prophecy = prophecy;
         Ok(entry.handle(index))
     }
@@ -357,7 +468,9 @@ impl<T, const LOW_BITS: usize> KeyedArena<T, LOW_BITS> {
         handle: KeyedArenaHandle<T, LOW_BITS>,
     ) -> KeyedArenaResult<KeyedArenaHandle<T, LOW_BITS>> {
         let index = self.validate_handle(handle)?;
-        let entry = self.entries[index].as_mut().expect("validated live arena entry");
+        let entry = self.entries[index]
+            .as_mut()
+            .expect("validated live arena entry");
         entry.generation = self.next_generation;
         self.next_generation = self.next_generation.wrapping_add(1).max(1);
         Ok(entry.handle(index))
@@ -366,7 +479,9 @@ impl<T, const LOW_BITS: usize> KeyedArena<T, LOW_BITS> {
     /// Remove a value. The old handle becomes invalid immediately.
     pub fn remove(&mut self, handle: KeyedArenaHandle<T, LOW_BITS>) -> KeyedArenaResult<T> {
         let index = self.validate_handle(handle)?;
-        let entry = self.entries[index].take().expect("validated live arena entry");
+        let entry = self.entries[index]
+            .take()
+            .expect("validated live arena entry");
         self.free.push(index);
         self.live -= 1;
         Ok(*entry.value)
@@ -380,7 +495,9 @@ impl<T, const LOW_BITS: usize> KeyedArena<T, LOW_BITS> {
         seed_frame: OpFrame,
     ) -> KeyedArenaResult<DispatchResult<OpFrame>> {
         let index = self.validate_handle(handle)?;
-        let entry = self.entries[index].as_ref().expect("validated live arena entry");
+        let entry = self.entries[index]
+            .as_ref()
+            .expect("validated live arena entry");
         if entry.prophecy.skip_hint {
             Ok(Ok(seed_frame))
         } else {
@@ -389,10 +506,16 @@ impl<T, const LOW_BITS: usize> KeyedArena<T, LOW_BITS> {
     }
 
     /// Dispatch all live entries in slot order.
-    pub fn dispatch_all(&self, table: &OperationTable, seed_frame: OpFrame) -> KeyedArenaResult<Vec<DispatchResult<OpFrame>>> {
+    pub fn dispatch_all(
+        &self,
+        table: &OperationTable,
+        seed_frame: OpFrame,
+    ) -> KeyedArenaResult<Vec<DispatchResult<OpFrame>>> {
         let mut out = Vec::with_capacity(self.live);
         for (index, entry) in self.entries.iter().enumerate() {
-            let Some(entry) = entry.as_ref() else { continue; };
+            let Some(entry) = entry.as_ref() else {
+                continue;
+            };
             let handle = entry.handle(index);
             self.validate_handle(handle)?;
             if entry.prophecy.skip_hint {

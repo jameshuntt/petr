@@ -28,9 +28,10 @@ impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize> Copy
 impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize> Clone
     for PagedKeyedArenaHandle<T, LOW_BITS, PAGE_SIZE>
 {
-    fn clone(&self) -> Self { *self }
+    fn clone(&self) -> Self {
+        *self
+    }
 }
-
 
 /// Opaque capability for one stable physical page in a [`PagedKeyedArena`].
 ///
@@ -53,20 +54,28 @@ impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize> Copy
 impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize> Clone
     for PagedKeyedArenaPageHandle<T, LOW_BITS, PAGE_SIZE>
 {
-    fn clone(&self) -> Self { *self }
+    fn clone(&self) -> Self {
+        *self
+    }
 }
 
 impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize>
     PagedKeyedArenaPageHandle<T, LOW_BITS, PAGE_SIZE>
 {
     /// Physical page index carried by this capability.
-    pub const fn page_index(self) -> usize { self.page_index as usize }
+    pub const fn page_index(self) -> usize {
+        self.page_index as usize
+    }
 
     /// Page generation carried by this capability.
-    pub const fn generation(self) -> u32 { self.generation }
+    pub const fn generation(self) -> u32 {
+        self.generation
+    }
 
     /// Masked keyed page-address check word.
-    pub const fn check_word(self) -> NonZeroUsize { self.check }
+    pub const fn check_word(self) -> NonZeroUsize {
+        self.check
+    }
 
     /// Build a forged/test capability with another generation.
     pub const fn with_generation(self, generation: u32) -> Self {
@@ -99,25 +108,39 @@ impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize>
     PagedKeyedArenaHandle<T, LOW_BITS, PAGE_SIZE>
 {
     /// Flat slot index carried by this handle.
-    pub const fn index(self) -> u32 { self.index }
+    pub const fn index(self) -> u32 {
+        self.index
+    }
 
     /// Physical page index derived from the flat slot index.
-    pub const fn page_index(self) -> usize { self.index as usize / PAGE_SIZE }
+    pub const fn page_index(self) -> usize {
+        self.index as usize / PAGE_SIZE
+    }
 
     /// Slot index within the physical page.
-    pub const fn slot_index(self) -> usize { self.index as usize % PAGE_SIZE }
+    pub const fn slot_index(self) -> usize {
+        self.index as usize % PAGE_SIZE
+    }
 
     /// Generation carried by this handle.
-    pub const fn generation(self) -> u32 { self.generation }
+    pub const fn generation(self) -> u32 {
+        self.generation
+    }
 
     /// Masked nonzero verification word. This is not a raw pointer authority.
-    pub const fn check_word(self) -> NonZeroUsize { self.check }
+    pub const fn check_word(self) -> NonZeroUsize {
+        self.check
+    }
 
     /// Trait/implementation/function selector attached to this handle.
-    pub const fn selector(self) -> SelectorWord { self.selector }
+    pub const fn selector(self) -> SelectorWord {
+        self.selector
+    }
 
     /// Prophecy/hint bits attached to this handle.
-    pub const fn prophecy(self) -> ProphecyBits { self.prophecy }
+    pub const fn prophecy(self) -> ProphecyBits {
+        self.prophecy
+    }
 
     /// Low state tag visible in the keyed check word.
     pub const fn tag(self) -> usize {
@@ -154,7 +177,14 @@ impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize>
         selector: SelectorWord,
         prophecy: ProphecyBits,
     ) -> Self {
-        Self { index, generation, check, selector, prophecy, _marker: PhantomData }
+        Self {
+            index,
+            generation,
+            check,
+            selector,
+            prophecy,
+            _marker: PhantomData,
+        }
     }
 }
 
@@ -225,11 +255,7 @@ impl<T, const PAGE_SIZE: usize> ArenaPage<T, PAGE_SIZE> {
 /// Compared with [`crate::KeyedArena`], this form amortizes allocation cost over
 /// `PAGE_SIZE` entries and improves locality for record-oriented runtimes.
 #[derive(Debug)]
-pub struct PagedKeyedArena<
-    T,
-    const LOW_BITS: usize,
-    const PAGE_SIZE: usize,
-> {
+pub struct PagedKeyedArena<T, const LOW_BITS: usize, const PAGE_SIZE: usize> {
     key: Key<LOW_BITS>,
     pages: Vec<Box<ArenaPage<T, PAGE_SIZE>>>,
     free: Vec<usize>,
@@ -242,14 +268,16 @@ pub struct PagedKeyedArena<
 impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize> Default
     for PagedKeyedArena<T, LOW_BITS, PAGE_SIZE>
 {
-    fn default() -> Self { Self::new_randomized() }
+    fn default() -> Self {
+        Self::new_randomized()
+    }
 }
 
-impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize>
-    PagedKeyedArena<T, LOW_BITS, PAGE_SIZE>
-{
+impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize> PagedKeyedArena<T, LOW_BITS, PAGE_SIZE> {
     /// Create an arena with an OS-random key when available.
-    pub fn new_randomized() -> Self { Self::with_key(Key::random()) }
+    pub fn new_randomized() -> Self {
+        Self::with_key(Key::random())
+    }
 
     /// Create an arena with a deterministic key, mostly useful for tests.
     pub fn with_key(key: Key<LOW_BITS>) -> Self {
@@ -266,22 +294,34 @@ impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize>
     }
 
     /// Return the arena key value.
-    pub const fn key(&self) -> Key<LOW_BITS> { self.key }
+    pub const fn key(&self) -> Key<LOW_BITS> {
+        self.key
+    }
 
     /// Number of live entries.
-    pub const fn len(&self) -> usize { self.live }
+    pub const fn len(&self) -> usize {
+        self.live
+    }
 
     /// Return true when the arena has no live entries.
-    pub const fn is_empty(&self) -> bool { self.live == 0 }
+    pub const fn is_empty(&self) -> bool {
+        self.live == 0
+    }
 
     /// Number of allocated physical pages.
-    pub const fn page_count(&self) -> usize { self.pages.len() }
+    pub const fn page_count(&self) -> usize {
+        self.pages.len()
+    }
 
     /// Number of entries each page can hold.
-    pub const fn page_size(&self) -> usize { PAGE_SIZE }
+    pub const fn page_size(&self) -> usize {
+        PAGE_SIZE
+    }
 
     /// Number of slot indexes that have been issued at least once.
-    pub const fn slot_capacity(&self) -> usize { self.next_slot }
+    pub const fn slot_capacity(&self) -> usize {
+        self.next_slot
+    }
 
     /// Total slots available in already allocated pages.
     pub const fn allocated_slot_capacity(&self) -> usize {
@@ -289,20 +329,22 @@ impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize>
     }
 
     /// Number of vacant reusable slots.
-    pub const fn free_len(&self) -> usize { self.free.len() }
+    pub const fn free_len(&self) -> usize {
+        self.free.len()
+    }
 
     /// Return the current capability for one allocated physical page.
     pub fn page_handle_at(
         &self,
         page_index: usize,
     ) -> Option<PagedKeyedArenaPageHandle<T, LOW_BITS, PAGE_SIZE>> {
-        self.pages.get(page_index).map(|page| page.handle::<LOW_BITS>(page_index))
+        self.pages
+            .get(page_index)
+            .map(|page| page.handle::<LOW_BITS>(page_index))
     }
 
     /// Return capabilities for every allocated page containing live entries.
-    pub fn live_page_handles(
-        &self,
-    ) -> Vec<PagedKeyedArenaPageHandle<T, LOW_BITS, PAGE_SIZE>> {
+    pub fn live_page_handles(&self) -> Vec<PagedKeyedArenaPageHandle<T, LOW_BITS, PAGE_SIZE>> {
         self.pages
             .iter()
             .enumerate()
@@ -333,7 +375,9 @@ impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize>
     ) -> KeyedArenaResult<usize> {
         let page_index = handle.page_index as usize;
         let Some(page) = self.pages.get(page_index) else {
-            return Err(KeyedArenaError::BadIndex { index: handle.page_index });
+            return Err(KeyedArenaError::BadIndex {
+                index: handle.page_index,
+            });
         };
         if page.generation != handle.generation {
             return Err(KeyedArenaError::StaleGeneration {
@@ -343,12 +387,16 @@ impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize>
             });
         }
         if page.check != handle.check {
-            return Err(KeyedArenaError::CheckMismatch { index: handle.page_index });
+            return Err(KeyedArenaError::CheckMismatch {
+                index: handle.page_index,
+            });
         }
         let revealed = self.key.reveal_addr(handle.check)?;
         let address = (&**page as *const ArenaPage<T, PAGE_SIZE>) as usize;
         if revealed != address {
-            return Err(KeyedArenaError::RevealMismatch { index: handle.page_index });
+            return Err(KeyedArenaError::RevealMismatch {
+                index: handle.page_index,
+            });
         }
         Ok(page_index)
     }
@@ -388,8 +436,7 @@ impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize>
     ) -> Result<(), E>
     where
         E: From<KeyedArenaError>,
-        F: FnMut(usize, &mut T, SelectorWord, ProphecyBits)
-            -> Result<PagedEntryAction, E>,
+        F: FnMut(usize, &mut T, SelectorWord, ProphecyBits) -> Result<PagedEntryAction, E>,
     {
         let page_index = self.validate_page_handle(handle).map_err(E::from)?;
         let key = self.key;
@@ -399,7 +446,11 @@ impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize>
             let index = page_index * PAGE_SIZE + slot_index;
             match visitor(index, &mut entry.value, entry.selector, entry.prophecy)? {
                 PagedEntryAction::Preserve => {}
-                PagedEntryAction::Transition { tag, selector, prophecy } => {
+                PagedEntryAction::Transition {
+                    tag,
+                    selector,
+                    prophecy,
+                } => {
                     LowTagLayout::<LOW_BITS>::validate_tag(tag)
                         .map_err(KeyedArenaError::from)
                         .map_err(E::from)?;
@@ -423,7 +474,8 @@ impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize>
             .checked_add(additional)
             .ok_or(KeyedArenaError::CapacityExceeded)?;
         let required_pages = required.div_ceil(PAGE_SIZE);
-        self.pages.reserve(required_pages.saturating_sub(self.pages.len()));
+        self.pages
+            .reserve(required_pages.saturating_sub(self.pages.len()));
         while self.pages.len() < required_pages {
             let generation = self.next_page_generation;
             self.next_page_generation = self.next_page_generation.wrapping_add(1).max(1);
@@ -467,7 +519,10 @@ impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize>
 
         let key = self.key;
         let handle_result = {
-            let page = self.pages.get_mut(page_index).expect("reserved page exists");
+            let page = self
+                .pages
+                .get_mut(page_index)
+                .expect("reserved page exists");
             debug_assert!(page.slots[slot_index].is_none());
             page.slots[slot_index] = Some(PagedArenaEntry {
                 value,
@@ -478,7 +533,9 @@ impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize>
             });
 
             let check_result = {
-                let entry = page.slots[slot_index].as_ref().expect("inserted entry exists");
+                let entry = page.slots[slot_index]
+                    .as_ref()
+                    .expect("inserted entry exists");
                 let address = &entry.value as *const T as usize;
                 key.mask_addr(address, tag)
             };
@@ -518,18 +575,12 @@ impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize>
         }
     }
 
-    fn entry(
-        &self,
-        index: usize,
-    ) -> Option<&PagedArenaEntry<T>> {
+    fn entry(&self, index: usize) -> Option<&PagedArenaEntry<T>> {
         let page = self.pages.get(index / PAGE_SIZE)?;
         page.slots.get(index % PAGE_SIZE)?.as_ref()
     }
 
-    fn entry_mut(
-        &mut self,
-        index: usize,
-    ) -> Option<&mut PagedArenaEntry<T>> {
+    fn entry_mut(&mut self, index: usize) -> Option<&mut PagedArenaEntry<T>> {
         let page = self.pages.get_mut(index / PAGE_SIZE)?;
         page.slots.get_mut(index % PAGE_SIZE)?.as_mut()
     }
@@ -541,10 +592,14 @@ impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize>
     ) -> KeyedArenaResult<usize> {
         let index = handle.index as usize;
         if index >= self.next_slot {
-            return Err(KeyedArenaError::BadIndex { index: handle.index });
+            return Err(KeyedArenaError::BadIndex {
+                index: handle.index,
+            });
         }
         let Some(entry) = self.entry(index) else {
-            return Err(KeyedArenaError::Vacant { index: handle.index });
+            return Err(KeyedArenaError::Vacant {
+                index: handle.index,
+            });
         };
         if entry.generation != handle.generation {
             return Err(KeyedArenaError::StaleGeneration {
@@ -554,26 +609,31 @@ impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize>
             });
         }
         if entry.check != handle.check {
-            return Err(KeyedArenaError::CheckMismatch { index: handle.index });
+            return Err(KeyedArenaError::CheckMismatch {
+                index: handle.index,
+            });
         }
         if entry.selector != handle.selector {
-            return Err(KeyedArenaError::SelectorMismatch { index: handle.index });
+            return Err(KeyedArenaError::SelectorMismatch {
+                index: handle.index,
+            });
         }
         if entry.prophecy != handle.prophecy {
-            return Err(KeyedArenaError::ProphecyMismatch { index: handle.index });
+            return Err(KeyedArenaError::ProphecyMismatch {
+                index: handle.index,
+            });
         }
         let revealed = self.key.reveal_addr(handle.check)?;
         if revealed != &entry.value as *const T as usize {
-            return Err(KeyedArenaError::RevealMismatch { index: handle.index });
+            return Err(KeyedArenaError::RevealMismatch {
+                index: handle.index,
+            });
         }
         Ok(index)
     }
 
     /// Return true if the handle currently resolves to a live entry.
-    pub fn contains(
-        &self,
-        handle: PagedKeyedArenaHandle<T, LOW_BITS, PAGE_SIZE>,
-    ) -> bool {
+    pub fn contains(&self, handle: PagedKeyedArenaHandle<T, LOW_BITS, PAGE_SIZE>) -> bool {
         self.validate_handle(handle).is_ok()
     }
 
@@ -592,14 +652,14 @@ impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize>
         handle: PagedKeyedArenaHandle<T, LOW_BITS, PAGE_SIZE>,
     ) -> KeyedArenaResult<&mut T> {
         let index = self.validate_handle(handle)?;
-        Ok(&mut self.entry_mut(index).expect("validated live paged entry").value)
+        Ok(&mut self
+            .entry_mut(index)
+            .expect("validated live paged entry")
+            .value)
     }
 
     /// Return the current handle for a flat index when it is live.
-    pub fn handle_at(
-        &self,
-        index: usize,
-    ) -> Option<PagedKeyedArenaHandle<T, LOW_BITS, PAGE_SIZE>> {
+    pub fn handle_at(&self, index: usize) -> Option<PagedKeyedArenaHandle<T, LOW_BITS, PAGE_SIZE>> {
         self.entry(index).map(|entry| entry.handle(index))
     }
 
@@ -680,8 +740,13 @@ impl<T, const LOW_BITS: usize, const PAGE_SIZE: usize>
         let page_index = index / PAGE_SIZE;
         let slot_index = index % PAGE_SIZE;
         let value = {
-            let page = self.pages.get_mut(page_index).expect("validated page exists");
-            let entry = page.slots[slot_index].take().expect("validated entry exists");
+            let page = self
+                .pages
+                .get_mut(page_index)
+                .expect("validated page exists");
+            let entry = page.slots[slot_index]
+                .take()
+                .expect("validated entry exists");
             page.live -= 1;
             entry.value
         };

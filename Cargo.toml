@@ -5,6 +5,11 @@ members = [
     "crates/petr-dispatch",
     "crates/petr-collections",
     "crates/petr-resource",
+    "crates/petr-protection",
+    "crates/petr-execution",
+    "crates/petr-hw",
+    "crates/petr-affinity",
+    "crates/petr-temporal",
     "crates/petr-math",
     "crates/petr-spatial",
     "crates/petr",
@@ -16,7 +21,7 @@ exclude = ["fuzz"]
 [workspace.package]
 edition = "2024"
 license = "MIT OR Apache-2.0"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["James Hunt"]
 repository = "https://github.com/jameshuntt/petr"
 keywords = ["pointer", "tagging", "arena", "dispatch", "handles"]
