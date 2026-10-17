@@ -64,7 +64,13 @@ jobs:
         with:
           components: miri
       - run: cargo +nightly miri setup
-      - name: TEST_MIRI.command (the PETR tests), plain and with strict provenance
+      - name: Clone allot, scope, waker_tables, waker_protocol and ob-serve-a-bowl beside this repo (../<name>)
+        run: |
+          for s in allot scope waker_tables waker_protocol ob-serve-a-bowl; do
+            git clone --depth 1 "https://github.com/jameshuntt/$s.git" "../$s"
+            echo "$s: $(git -C "../$s" rev-parse --short HEAD)"
+          done
+      - name: TEST_MIRI.command (the PETR and allot tests), plain and with strict provenance
         env:
           PROPTEST_DISABLE_FAILURE_PERSISTENCE: "1"
         run: |
@@ -75,6 +81,8 @@ jobs:
             cargo +nightly miri test -p petr-core --test core_invariants keyed_pointers_keep_low_tags_visible_and_mask_clean_addresses -- --exact
             cargo +nightly miri test -p petr-collections --test collection_invariants keyed_arena_insert_get_mut_remove_and_reuse_slots_with_generations -- --exact
             cargo +nightly miri test -p petr-collections --test paged_arena_invariants reset_and_clear_drop_each_initialized_value_exactly_once -- --exact
+            cargo +nightly miri test --manifest-path ../allot/Cargo.toml --test memory rawbuf_grows_and_preserves_values -- --exact
+            cargo +nightly miri test --manifest-path ../allot/Cargo.toml --test memory arena_reset_runs_destructors_and_reuses_storage -- --exact
           done
 
   loom:
@@ -82,10 +90,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - name: TEST_LOOM.command (the PETR authority models)
-        run: cargo test -p petr-execution --test loom_authority --release --locked
+      - name: Clone allot, scope, waker_tables, waker_protocol and ob-serve-a-bowl beside this repo (../<name>)
+        run: |
+          for s in allot scope waker_tables waker_protocol ob-serve-a-bowl; do
+            git clone --depth 1 "https://github.com/jameshuntt/$s.git" "../$s"
+            echo "$s: $(git -C "../$s" rev-parse --short HEAD)"
+          done
+      - name: TEST_LOOM.command (the PETR authority models, then the scope and ob-serve-a-bowl models)
         env:
           RUSTFLAGS: --cfg loom -D warnings
+        run: |
+          cargo test -p petr-execution --test loom_authority --release --locked
+          (cd ../scope && cargo test --test loom_wake --release && cargo test --lib --release)
+          (cd ../ob-serve-a-bowl && ./scripts/loom_gate.sh)
+          (cd ../ob-serve-a-bowl && cargo test --all-features --lib loom_wake_tests && cargo test --all-features --test loom_atomic_wake_tests)
 
   fuzz:
     runs-on: ubuntu-latest
@@ -99,6 +117,37 @@ jobs:
             cargo +nightly fuzz run "$target" -- -max_total_time=60 || exit 1
           done
 
+  runtime:
+    # The allot and runtime parts of TEST_INTEGRATION, TEST_HARDENING, TEST_RELEASE and TEST_EXISTING_RUNTIME,
+    # against the public repos.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Clone allot, scope, waker_tables, waker_protocol and ob-serve-a-bowl beside this repo (../<name>)
+        run: |
+          for s in allot scope waker_tables waker_protocol ob-serve-a-bowl; do
+            git clone --depth 1 "https://github.com/jameshuntt/$s.git" "../$s"
+            echo "$s: $(git -C "../$s" rev-parse --short HEAD)"
+          done
+      - name: allot
+        run: |
+          cargo test --manifest-path ../allot/Cargo.toml --features paging
+          cargo test --manifest-path ../allot/Cargo.toml --release --test hardening
+          cargo test --manifest-path ../allot/Cargo.toml --all-features --all-targets
+      - name: TEST_EXISTING_RUNTIME.command
+        run: |
+          for s in scope waker_tables waker_protocol ob-serve-a-bowl; do
+            (cd "../$s" && cargo test --lib --tests) || exit 1
+          done
+      - name: The runtime part of TEST_HARDENING.command
+        run: |
+          cargo test --manifest-path ../waker_tables/Cargo.toml
+          cargo test --manifest-path ../scope/Cargo.toml
+          cargo test --manifest-path ../waker_protocol/Cargo.toml
+          cargo test --manifest-path ../ob-serve-a-bowl/Cargo.toml --all-features
+          (cd ../scope && RUSTFLAGS="--cfg loom" cargo test --test loom_wake --release)
+
   latest-deps:
     # Not a publish gate: a third-party release should not block a tag, but it should show up here.
     if: github.event_name == 'schedule' || github.event_name == 'push'
@@ -111,7 +160,7 @@ jobs:
 
   publish:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [test, arm, miri, loom, fuzz]
+    needs: [test, arm, miri, loom, fuzz, runtime]
     runs-on: ubuntu-latest
     permissions:
       contents: read
